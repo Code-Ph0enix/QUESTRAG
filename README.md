@@ -25,6 +25,7 @@
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 - [Contact](#contact)
+- [Status](#Status)
 - [Links](#links)
 
 ---
@@ -423,6 +424,11 @@ MIT License — see [LICENSE](LICENSE)
 📧 [eeshanyajoshi@example.com](mailto:eeshanyajoshi@example.com)
 🐙 [@yourusername](https://github.com/yourusername)
 💼 [LinkedIn](https://linkedin.com/in/yourprofile)
+
+---
+## 📈 Status
+
+> ### 🚧 **Currently under development** — Some important changes and bug fixes are underway... Stay Tuned !! Live Link Coming Soon !! ❤️❤️
 
 ---
 
