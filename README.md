@@ -428,7 +428,7 @@ MIT License — see [LICENSE](LICENSE)
 ---
 ## 📈 Status
 
-> ### 🚧 **Currently under development** — Some important changes and bug fixes are underway... Stay Tuned !! Live Link Coming Soon !! ❤️❤️
+### 🚧 **Currently under development** — Some important changes and bug fixes are underway... Stay Tuned !! Live Link Coming Soon !! ❤️❤️
 
 ---
 
