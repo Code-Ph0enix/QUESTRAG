@@ -563,7 +563,7 @@ MIT License — see [LICENSE](LICENSE)
 ## 📞 Contact
 
 **Eeshanya Amit Joshi**  
-📧 [eeshanyajoshi@example.com](mailto:eeshanyajoshi@gmail.com)    
+📧 [Email](mailto:eeshanyajoshi@gmail.com)    
 💼 [LinkedIn](https://www.linkedin.com/in/eeshanyajoshi/)
 
 ---
@@ -593,4 +593,4 @@ MIT License — see [LICENSE](LICENSE)
 ---
 
 <p align="center">✨ Made with ❤️ for the Banking Industry ✨</p>
-<p align="center">Powered by HuggingFace 🤗 | Groq ⚡ | MongoDB 🍃 | Docker 🐳 | </p>
+<p align="center">Powered by HuggingFace 🤗| Groq ⚡| MongoDB 🍃| Docker 🐳| </p>
