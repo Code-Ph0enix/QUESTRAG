@@ -232,6 +232,183 @@ POLICY_MODEL: Optional[PolicyNetwork] = None
 POLICY_TOKENIZER: Optional[AutoTokenizer] = None
 
 
+
+# =============================================================================================
+# Latest version given by perplexity, should work, if not then use one of the other versions.
+# =============================================================================================
+
+def load_policy_model() -> PolicyNetwork:
+    """
+    Load trained policy model (called once on startup).
+    Downloads from HuggingFace Hub if not present locally.
+    Uses module-level caching - model stays in RAM.
+    
+    Returns:
+        PolicyNetwork: Loaded policy model
+    """
+    global POLICY_MODEL, POLICY_TOKENIZER
+    
+    if POLICY_MODEL is None:
+        # Download model from HF Hub if needed (for deployment)
+        settings.download_model_if_needed(
+            hf_filename="models/best_policy_model.pth",
+            local_path=settings.POLICY_MODEL_PATH
+        )
+        
+        print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+        
+        try:
+            # Load checkpoint first to get vocab size
+            checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
+            
+            # Create model instance
+            POLICY_MODEL = PolicyNetwork(
+                model_name="bert-base-uncased",
+                dropout_rate=0.1
+            )
+            
+            # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
+            saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
+            current_vocab_size = len(POLICY_MODEL.tokenizer)
+            
+            if saved_vocab_size != current_vocab_size:
+                print(f"⚠️ Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
+                print(f"✅ Resizing tokenizer and embeddings to match saved model...")
+                # Resize model to match saved checkpoint
+                POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
+            
+            # Move to device
+            POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+            
+            # Now load trained weights (sizes will match!)
+            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+            else:
+                POLICY_MODEL.load_state_dict(checkpoint)
+            
+            # Set to evaluation mode
+            POLICY_MODEL.eval()
+            
+            # Cache tokenizer
+            POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+            
+            print("✅ Policy network loaded and cached")
+            
+        except FileNotFoundError:
+            print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
+            print(f"⚠️ Make sure models are uploaded to HuggingFace Hub: {settings.HF_MODEL_REPO}")
+            raise
+        except Exception as e:
+            print(f"❌ Failed to load policy model: {e}")
+            raise
+    
+    return POLICY_MODEL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ===========================================================================
+# This version is used in the code, atleast for localhost testing
+# ===========================================================================
+
+# def load_policy_model() -> PolicyNetwork:
+#     """
+#     Load trained policy model (called once on startup).
+#     Uses module-level caching - model stays in RAM.
+    
+#     Returns:
+#         PolicyNetwork: Loaded policy model
+#     """
+#     global POLICY_MODEL, POLICY_TOKENIZER
+    
+#     if POLICY_MODEL is None:
+#         print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+        
+#         try:
+#             # Load checkpoint first to get vocab size
+#             checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
+            
+#             # Create model instance
+#             POLICY_MODEL = PolicyNetwork(
+#                 model_name="bert-base-uncased",
+#                 dropout_rate=0.1
+#             )
+            
+#             # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
+#             saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
+#             current_vocab_size = len(POLICY_MODEL.tokenizer)
+            
+#             if saved_vocab_size != current_vocab_size:
+#                 print(f"⚠️  Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
+#                 print(f"✅ Resizing tokenizer and embeddings to match saved model...")
+                
+#                 # Resize model to match saved checkpoint
+#                 POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
+            
+#             # Move to device
+#             POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+            
+#             # Now load trained weights (sizes will match!)
+#             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+#                 POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+#             else:
+#                 POLICY_MODEL.load_state_dict(checkpoint)
+            
+#             # Set to evaluation mode
+#             POLICY_MODEL.eval()
+            
+#             # Cache tokenizer
+#             POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+            
+#             print("✅ Policy network loaded and cached")
+        
+#         except FileNotFoundError:
+#             print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
+#             print("⚠️  You need to train the policy network first!")
+#             raise
+        
+#         except Exception as e:
+#             print(f"❌ Failed to load policy model: {e}")
+#             raise
+    
+#     return POLICY_MODEL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =====================================================================================
+# This is the older version or proably a different version, potentially still useful
+# =====================================================================================
+
 # def load_policy_model() -> PolicyNetwork:
 #     """
 #     Load trained policy model (called once on startup).
@@ -281,67 +458,12 @@ POLICY_TOKENIZER: Optional[AutoTokenizer] = None
 #             raise
     
 #     return POLICY_MODEL
-def load_policy_model() -> PolicyNetwork:
-    """
-    Load trained policy model (called once on startup).
-    Uses module-level caching - model stays in RAM.
-    
-    Returns:
-        PolicyNetwork: Loaded policy model
-    """
-    global POLICY_MODEL, POLICY_TOKENIZER
-    
-    if POLICY_MODEL is None:
-        print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
-        
-        try:
-            # Load checkpoint first to get vocab size
-            checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
-            
-            # Create model instance
-            POLICY_MODEL = PolicyNetwork(
-                model_name="bert-base-uncased",
-                dropout_rate=0.1
-            )
-            
-            # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
-            saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
-            current_vocab_size = len(POLICY_MODEL.tokenizer)
-            
-            if saved_vocab_size != current_vocab_size:
-                print(f"⚠️  Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
-                print(f"✅ Resizing tokenizer and embeddings to match saved model...")
-                
-                # Resize model to match saved checkpoint
-                POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
-            
-            # Move to device
-            POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
-            
-            # Now load trained weights (sizes will match!)
-            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-                POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
-            else:
-                POLICY_MODEL.load_state_dict(checkpoint)
-            
-            # Set to evaluation mode
-            POLICY_MODEL.eval()
-            
-            # Cache tokenizer
-            POLICY_TOKENIZER = POLICY_MODEL.tokenizer
-            
-            print("✅ Policy network loaded and cached")
-        
-        except FileNotFoundError:
-            print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
-            print("⚠️  You need to train the policy network first!")
-            raise
-        
-        except Exception as e:
-            print(f"❌ Failed to load policy model: {e}")
-            raise
-    
-    return POLICY_MODEL
+
+
+
+
+
+
 
 
 

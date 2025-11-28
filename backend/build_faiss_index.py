@@ -39,10 +39,10 @@ from typing import List
 KB_JSONL_FILE = "data/final_knowledge_base.jsonl"
 
 # Where is your trained retriever model?
-RETRIEVER_MODEL_PATH = "models/best_retriever_model.pth"
+RETRIEVER_MODEL_PATH = "app/models/best_retriever_model.pth"
 
 # Where to save the output FAISS pickle?
-OUTPUT_PKL_FILE = "models/faiss_index.pkl"
+OUTPUT_PKL_FILE = "app/models/faiss_index.pkl"
 
 # Device (auto-detect GPU/CPU)
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

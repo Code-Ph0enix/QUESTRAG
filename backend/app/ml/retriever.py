@@ -220,9 +220,17 @@ FAISS_INDEX: Optional[faiss.Index] = None
 KB_DATA: Optional[List[Dict]] = None
 
 
+
+
+
+# =============================================================================================
+# Latest version given by perplexity, should work, if not then use one of the other versions.
+# =============================================================================================
+
 def load_retriever() -> CustomRetrieverModel:
     """
     Load custom retriever model (called once on startup).
+    Downloads from HuggingFace Hub if not present locally.
     Uses module-level caching - model stays in RAM.
     
     Returns:
@@ -231,19 +239,65 @@ def load_retriever() -> CustomRetrieverModel:
     global RETRIEVER_MODEL
     
     if RETRIEVER_MODEL is None:
+        # Download model from HF Hub if needed (for deployment)
+        settings.download_model_if_needed(
+            hf_filename="models/best_retriever_model.pth",
+            local_path=settings.RETRIEVER_MODEL_PATH
+        )
+        
         print(f"Loading custom retriever from {settings.RETRIEVER_MODEL_PATH}...")
+        
         RETRIEVER_MODEL = CustomRetrieverModel(
             model_path=settings.RETRIEVER_MODEL_PATH,
             device=settings.DEVICE
         )
+        
         print("✅ Retriever model loaded and cached")
     
     return RETRIEVER_MODEL
 
 
+
+
+
+
+
+
+
+# ===========================================================================
+# This version is used in the code, atleast for localhost testing
+# ===========================================================================
+
+# def load_retriever() -> CustomRetrieverModel:
+#     """
+#     Load custom retriever model (called once on startup).
+#     Uses module-level caching - model stays in RAM.
+    
+#     Returns:
+#         CustomRetrieverModel: Loaded retriever model
+#     """
+#     global RETRIEVER_MODEL
+    
+#     if RETRIEVER_MODEL is None:
+#         print(f"Loading custom retriever from {settings.RETRIEVER_MODEL_PATH}...")
+#         RETRIEVER_MODEL = CustomRetrieverModel(
+#             model_path=settings.RETRIEVER_MODEL_PATH,
+#             device=settings.DEVICE
+#         )
+#         print("✅ Retriever model loaded and cached")
+    
+#     return RETRIEVER_MODEL
+
+
+
+# =============================================================================================
+# Latest version given by perplexity, should work, if not then use one of the other versions.
+# =============================================================================================
+
 def load_faiss_index():
     """
     Load FAISS index + knowledge base from pickle file.
+    Downloads from HuggingFace Hub if not present locally.
     Uses module-level caching - loaded once on startup.
     
     Returns:
@@ -252,6 +306,18 @@ def load_faiss_index():
     global FAISS_INDEX, KB_DATA
     
     if FAISS_INDEX is None or KB_DATA is None:
+        # Download FAISS index from HF Hub if needed (for deployment)
+        settings.download_model_if_needed(
+            hf_filename="models/faiss_index.pkl",
+            local_path=settings.FAISS_INDEX_PATH
+        )
+        
+        # Download knowledge base from HF Hub if needed (for deployment)
+        settings.download_model_if_needed(
+            hf_filename="data/final_knowledge_base.jsonl",
+            local_path=settings.KB_PATH
+        )
+        
         print(f"Loading FAISS index from {settings.FAISS_INDEX_PATH}...")
         
         try:
@@ -261,17 +327,54 @@ def load_faiss_index():
             
             print(f"✅ FAISS index loaded: {FAISS_INDEX.ntotal} vectors")
             print(f"✅ Knowledge base loaded: {len(KB_DATA)} documents")
-        
+            
         except FileNotFoundError:
             print(f"❌ FAISS index file not found: {settings.FAISS_INDEX_PATH}")
-            print("⚠️  You need to create the FAISS index first!")
+            print(f"⚠️ Make sure models are uploaded to HuggingFace Hub: {settings.HF_MODEL_REPO}")
             raise
-        
         except Exception as e:
             print(f"❌ Failed to load FAISS index: {e}")
             raise
     
     return FAISS_INDEX, KB_DATA
+
+
+
+# ===========================================================================
+# This version is used in the code, atleast for localhost testing
+# ===========================================================================
+
+# def load_faiss_index():
+#     """
+#     Load FAISS index + knowledge base from pickle file.
+#     Uses module-level caching - loaded once on startup.
+    
+#     Returns:
+#         tuple: (faiss.Index, List[Dict]) - FAISS index and KB data
+#     """
+#     global FAISS_INDEX, KB_DATA
+    
+#     if FAISS_INDEX is None or KB_DATA is None:
+#         print(f"Loading FAISS index from {settings.FAISS_INDEX_PATH}...")
+        
+#         try:
+#             # Load pickled FAISS index + KB data
+#             with open(settings.FAISS_INDEX_PATH, 'rb') as f:
+#                 FAISS_INDEX, KB_DATA = pickle.load(f)
+            
+#             print(f"✅ FAISS index loaded: {FAISS_INDEX.ntotal} vectors")
+#             print(f"✅ Knowledge base loaded: {len(KB_DATA)} documents")
+        
+#         except FileNotFoundError:
+#             print(f"❌ FAISS index file not found: {settings.FAISS_INDEX_PATH}")
+#             print("⚠️  You need to create the FAISS index first!")
+#             raise
+        
+#         except Exception as e:
+#             print(f"❌ Failed to load FAISS index: {e}")
+#             raise
+    
+#     return FAISS_INDEX, KB_DATA
 
 
 # ============================================================================

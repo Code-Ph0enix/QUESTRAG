@@ -7,6 +7,8 @@ Updated to support multiple Groq API keys and HuggingFace tokens with fallback l
 import os
 from typing import List
 from dotenv import load_dotenv
+import shutil  # Add this import
+
 
 load_dotenv()
 
@@ -96,6 +98,48 @@ class Settings:
     # ========================================================================
     POLICY_MAX_LEN: int = int(os.getenv("POLICY_MAX_LEN", "256"))
     CONFIDENCE_THRESHOLD: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.7"))
+
+        # ========================================================================
+    # HUGGING FACE MODEL REPOSITORY (for deployment)
+    # ========================================================================
+    HF_MODEL_REPO: str = os.getenv("HF_MODEL_REPO", "YOUR_USERNAME/questrag-models")
+    
+    def download_model_if_needed(self, hf_filename: str, local_path: str):
+        """
+        Download model from HuggingFace Hub if not exists locally.
+        This runs on startup for deployment.
+        
+        Args:
+            hf_filename: Path in HF repo (e.g., "models/best_policy_model.pth")
+            local_path: Where to save locally (e.g., "app/models/best_policy_model.pth")
+        """
+        if not os.path.exists(local_path):
+            print(f"📥 Downloading {hf_filename} from HuggingFace Hub...")
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            
+            try:
+                from huggingface_hub import hf_hub_download
+                import shutil
+                
+                # Download from HF Hub
+                downloaded_path = hf_hub_download(
+                    repo_id=self.HF_MODEL_REPO,
+                    filename=hf_filename,
+                    repo_type="model",
+                    cache_dir=".cache"
+                )
+                
+                # Copy to expected location
+                shutil.copy(downloaded_path, local_path)
+                print(f"✅ Downloaded {hf_filename}")
+            except Exception as e:
+                print(f"❌ Error downloading {hf_filename}: {e}")
+                raise
+        else:
+            print(f"✓ Model already exists: {local_path}")
+        
+        return local_path
+
     
     # ========================================================================
     # HELPER METHODS
