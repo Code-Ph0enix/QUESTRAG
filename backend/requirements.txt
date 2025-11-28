@@ -22,7 +22,7 @@ huggingface-hub==0.24.6
 
 # Embeddings & Vector Search
 sentence-transformers==2.2.2
-faiss-cpu==1.7.4
+faiss-cpu==1.13.0
 numpy==1.24.3
 
 
