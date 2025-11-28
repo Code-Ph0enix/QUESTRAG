@@ -563,9 +563,8 @@ MIT License — see [LICENSE](LICENSE)
 ## 📞 Contact
 
 **Eeshanya Amit Joshi**  
-📧 [eeshanyajoshi@example.com](mailto:eeshanyajoshi@example.com)  
-🐙 [@eeshanyaj](https://github.com/eeshanyaj)  
-💼 [LinkedIn](https://linkedin.com/in/yourprofile)
+📧 [eeshanyajoshi@example.com](mailto:eeshanyajoshi@gmail.com)    
+💼 [LinkedIn](https://www.linkedin.com/in/eeshanyajoshi/)
 
 ---
 
@@ -590,9 +589,8 @@ MIT License — see [LICENSE](LICENSE)
 - **HuggingFace Space:** https://huggingface.co/spaces/eeshanyaj/questrag-backend
 - **Model Repository:** https://huggingface.co/eeshanyaj/questrag_models
 - **Research Paper:** [AAAI 2024 Workshop](https://arxiv.org/abs/2401.06800)
-- **GitHub Repository:** [Coming Soon]
 
 ---
 
 <p align="center">✨ Made with ❤️ for the Banking Industry ✨</p>
-<p align="center">Powered by HuggingFace 🤗 | Groq ⚡ | MongoDB 🍃</p>
+<p align="center">Powered by HuggingFace 🤗 | Groq ⚡ | MongoDB 🍃 | Docker 🐳 | </p>
