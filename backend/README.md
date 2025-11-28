@@ -1,3 +1,12 @@
+---
+title: QUESTRAG Backend
+emoji: 🏦
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # 🏦 QUESTRAG - Banking QUEries and Support system via Trained Reinforced RAG
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
