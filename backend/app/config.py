@@ -102,7 +102,7 @@ class Settings:
         # ========================================================================
     # HUGGING FACE MODEL REPOSITORY (for deployment)
     # ========================================================================
-    HF_MODEL_REPO: str = os.getenv("HF_MODEL_REPO", "YOUR_USERNAME/questrag-models")
+    HF_MODEL_REPO: str = os.getenv("HF_MODEL_REPO", "eeshanyaj/questrag_models")
     
     def download_model_if_needed(self, hf_filename: str, local_path: str):
         """
