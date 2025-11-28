@@ -1,38 +1,78 @@
+# # FastAPI & Server
+# fastapi==0.104.1
+# uvicorn[standard]==0.24.0
+
+
+# # Data Validation
+# pydantic==2.5.0
+# pydantic-settings==2.1.0
+# python-dotenv==1.0.0
+
+
+# # Database
+# motor==3.3.2
+# pymongo==4.6.0
+
+
+# # LLM & AI Libraries
+# langchain-groq==0.1.9
+# langchain-core==0.2.38
+# huggingface-hub==0.24.6
+
+
+# # Embeddings & Vector Search
+# sentence-transformers==2.2.2
+# faiss-cpu==1.13.0
+# numpy==1.26.4
+
+
+# # ML/Deep Learning
+# torch==2.1.0
+# transformers==4.35.2
+
+
+# # Authentication
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+# python-multipart==0.0.6
+# bcrypt==4.1.1
+
+
 # FastAPI & Server
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi
+uvicorn[standard]
 
 
 # Data Validation
-pydantic==2.5.0
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
+pydantic
+pydantic-settings
+python-dotenv
 
 
 # Database
-motor==3.3.2
-pymongo==4.6.0
+motor
+pymongo
 
 
 # LLM & AI Libraries
-langchain-groq==0.1.9
-langchain-core==0.2.38
-huggingface-hub==0.24.6
+langchain-groq
+langchain-core
+huggingface-hub
 
 
 # Embeddings & Vector Search
-sentence-transformers==2.2.2
-faiss-cpu==1.13.0
-numpy==1.24.3
+sentence-transformers
+faiss-cpu
+numpy
 
 
 # ML/Deep Learning
-torch==2.1.0
-transformers==4.35.2
+torch
+transformers
 
 
 # Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-bcrypt==4.1.1
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+bcrypt
