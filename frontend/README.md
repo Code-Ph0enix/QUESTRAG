@@ -27,7 +27,7 @@ Modern, responsive React frontend for the Banking RAG AI Assistant with RL-enhan
 
 
 
-
+<!--
 1. README.md - GitHub Repository
 text
 # 🏦 QUESTRAG - Banking QUEries and Support system via Trained Reinforced RAG
@@ -433,7 +433,7 @@ text
 --- 
 -->
 
-## 📚 API Documentation
+<!--## 📚 API Documentation
 
 ### Authentication
 
@@ -563,8 +563,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Institute for Development and Research in Banking Technology (IDRBT), Hyderabad**
 - **Guided by**: Dr. Mridula Verma
 -->
----
 
+<!--
+---
+-->
+<!--
 ## 📞 Contact
 
 **Eeshanya Amit Joshi**
@@ -583,3 +586,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 <p align="center">Made with ❤️ for the Banking Industry</p>
+-->

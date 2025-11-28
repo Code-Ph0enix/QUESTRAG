@@ -1,11 +1,10 @@
 """
 FastAPI Main Application Entry Point
-
 Banking RAG Chatbot API with JWT Authentication
 
 This file:
 1. Creates the FastAPI app
-2. Configures CORS middleware
+2. Configures CORS middleware  
 3. Connects to MongoDB on startup/shutdown
 4. Includes API routers (auth + chat)
 5. Provides health check endpoints
@@ -18,6 +17,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
+
 
 # ============================================================================
 # LIFESPAN MANAGER (Startup & Shutdown)
@@ -52,13 +52,7 @@ async def lifespan(app: FastAPI):
     print("\n💡 ML Models Info:")
     print("   Policy Network: Loads on first chat request (lazy loading)")
     print("   Retriever Model: Loads on first retrieval (lazy loading)")
-    print("   LLM: Groq (ChatGroq) with HuggingFace fallback")
-    print("\n🤖 LLM Configuration:")
-    print(f"   Chat Model: {settings.GROQ_CHAT_MODEL} (Llama 3 8B)")
-    print(f"   Eval Model: {settings.GROQ_EVAL_MODEL} (Llama 3 70B)")
-    print(f"   Groq API Keys: {len(settings.get_groq_api_keys())} configured")
-    print(f"   HuggingFace Tokens: {len(settings.get_hf_tokens())} configured")
-    print(f"   Fallback: Groq → HuggingFace")
+    print("   LLM (Gemini): Connects on first generation")
     
     print("\n✅ Backend startup complete!")
     print("=" * 80)
@@ -83,6 +77,7 @@ async def lifespan(app: FastAPI):
     print("✅ Shutdown complete")
     print("=" * 80 + "\n")
 
+
 # ============================================================================
 # CREATE FASTAPI APPLICATION
 # ============================================================================
@@ -90,22 +85,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Banking RAG Chatbot API",
     description="""
-🤖 AI-powered Banking Assistant with:
-
-**Features:**
-- 🔐 JWT Authentication (Sign up, Login, Protected routes)
-- 💬 RAG (Retrieval-Augmented Generation)
-- 🧠 RL-based Policy Network (BERT)
-- 🔍 Custom E5 Retriever
-- ⚡ Groq LLM with HuggingFace Fallback (Llama 3 models)
-
-**Capabilities:**
-- Intelligent document retrieval
-- Context-aware responses
-- Conversation history
-- Real-time chat
-- User authentication & authorization
-- Multi-provider LLM with automatic fallback
+    🤖 AI-powered Banking Assistant with:
+    
+    **Features:**
+    - 🔐 JWT Authentication (Sign up, Login, Protected routes)
+    - 💬 RAG (Retrieval-Augmented Generation)
+    - 🧠 RL-based Policy Network (BERT)
+    - 🔍 Custom E5 Retriever
+    - ✨ Google Gemini LLM
+    
+    **Capabilities:**
+    - Intelligent document retrieval
+    - Context-aware responses
+    - Conversation history
+    - Real-time chat
+    - User authentication & authorization
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -113,11 +107,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
 # ============================================================================
 # CORS MIDDLEWARE
 # ============================================================================
 
 allowed_origins = settings.get_allowed_origins()
+
 print("\n🌐 CORS Configuration:")
 print(f"   Allowed Origins: {allowed_origins}")
 
@@ -128,6 +124,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ============================================================================
 # INCLUDE API ROUTERS
@@ -149,6 +146,7 @@ app.include_router(
     tags=["💬 Chat"]
 )
 
+
 # ============================================================================
 # ROOT ENDPOINTS
 # ============================================================================
@@ -163,11 +161,6 @@ async def root():
         "version": "1.0.0",
         "status": "online",
         "authentication": "JWT Bearer Token Required for chat endpoints",
-        "llm_provider": "Groq (ChatGroq) with HuggingFace fallback",
-        "models": {
-            "chat": settings.GROQ_CHAT_MODEL,
-            "evaluation": settings.GROQ_EVAL_MODEL
-        },
         "documentation": {
             "swagger_ui": "/docs",
             "redoc": "/redoc"
@@ -189,6 +182,7 @@ async def root():
         }
     }
 
+
 @app.get("/health", tags=["🏥 Health"])
 async def health_check():
     """
@@ -199,7 +193,6 @@ async def health_check():
     - MongoDB connection
     - ML models (lazy loaded)
     - Authentication system
-    - LLM providers (Groq & HuggingFace)
     
     Returns:
         dict: Health status of all components
@@ -216,22 +209,6 @@ async def health_check():
         "llm": "ready (API-based)"
     }
     
-    # Check LLM providers
-    llm_providers = {
-        "groq": {
-            "enabled": settings.is_groq_enabled(),
-            "api_keys_configured": len(settings.get_groq_api_keys()),
-            "chat_model": settings.GROQ_CHAT_MODEL,
-            "eval_model": settings.GROQ_EVAL_MODEL
-        },
-        "huggingface": {
-            "enabled": settings.is_hf_enabled(),
-            "tokens_configured": len(settings.get_hf_tokens()),
-            "chat_model": settings.HF_CHAT_MODEL,
-            "eval_model": settings.HF_EVAL_MODEL
-        }
-    }
-    
     # Check authentication
     auth_status = {
         "jwt_enabled": bool(settings.SECRET_KEY and settings.SECRET_KEY != "your-secret-key-change-in-production"),
@@ -240,22 +217,18 @@ async def health_check():
     }
     
     # Overall health
-    is_healthy = (
-        mongodb_status == "connected" and 
-        auth_status["jwt_enabled"] and
-        (llm_providers["groq"]["enabled"] or llm_providers["huggingface"]["enabled"])
-    )
+    is_healthy = mongodb_status == "connected" and auth_status["jwt_enabled"]
     
     return {
         "status": "healthy" if is_healthy else "degraded",
         "api": "online",
         "mongodb": mongodb_status,
         "authentication": auth_status,
-        "llm_providers": llm_providers,
         "ml_models": ml_models_status,
         "environment": settings.ENVIRONMENT,
         "debug_mode": settings.DEBUG
     }
+
 
 # ============================================================================
 # GLOBAL EXCEPTION HANDLER
@@ -282,6 +255,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "path": str(request.url.path)
         }
     )
+
 
 # ============================================================================
 # MAIN ENTRY POINT (for direct execution)

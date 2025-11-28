@@ -1,11 +1,12 @@
 """
 Chat Service - Main RAG Pipeline
+
 Combines: Policy Network → Retriever → LLM Generator
 
 This is the core service that orchestrates:
 1. Policy decision (FETCH vs NO_FETCH)
 2. Document retrieval (if FETCH)
-3. Response generation (Gemini)
+3. Response generation (Groq/HuggingFace with Llama 3)
 4. Logging to MongoDB
 
 Adapted from your RAG.py workflow
@@ -53,8 +54,6 @@ Rate the response as:
 
 Provide your rating and brief explanation."""
 
-
-
 # ============================================================================
 # CHAT SERVICE
 # ============================================================================
@@ -67,7 +66,7 @@ class ChatService:
     1. User query comes in
     2. Policy network decides: FETCH or NO_FETCH
     3. If FETCH: Retrieve documents from FAISS
-    4. Generate response using Gemini (with or without context)
+    4. Generate response using Groq/HuggingFace (with or without context)
     5. Return response + metadata
     """
     
@@ -97,18 +96,18 @@ class ChatService:
         
         Returns:
             dict: Complete response with metadata
-                {
-                    'response': str,                  # Generated response
-                    'policy_action': str,             # FETCH or NO_FETCH
-                    'policy_confidence': float,       # Confidence score
-                    'should_retrieve': bool,          # Whether retrieval was done
-                    'documents_retrieved': int,       # Number of docs retrieved
-                    'top_doc_score': float or None,   # Best similarity score
-                    'retrieval_time_ms': float,       # Time spent on retrieval
-                    'generation_time_ms': float,      # Time spent on generation
-                    'total_time_ms': float,           # Total processing time
-                    'timestamp': str                  # ISO timestamp
-                }
+            {
+                'response': str,  # Generated response
+                'policy_action': str,  # FETCH or NO_FETCH
+                'policy_confidence': float,  # Confidence score
+                'should_retrieve': bool,  # Whether retrieval was done
+                'documents_retrieved': int,  # Number of docs retrieved
+                'top_doc_score': float or None,  # Best similarity score
+                'retrieval_time_ms': float,  # Time spent on retrieval
+                'generation_time_ms': float,  # Time spent on generation
+                'total_time_ms': float,  # Total processing time
+                'timestamp': str  # ISO timestamp
+            }
         """
         start_time = time.time()
         
@@ -196,13 +195,13 @@ class ChatService:
             print(f"\n🚫 Skipping retrieval (Policy: {policy_result['action']})")
         
         # ====================================================================
-        # STEP 3: GENERATE RESPONSE (Gemini)
+        # STEP 3: GENERATE RESPONSE (Groq/HuggingFace with fallback)
         # ====================================================================
         print(f"\n💬 Generating response...")
         generation_start = time.time()
         
         try:
-            # Generate response using LLM manager (Gemini)
+            # Generate response using LLM manager (Groq → HuggingFace fallback)
             response = await llm_manager.generate_chat_response(
                 query=query,
                 context=context,
@@ -288,8 +287,8 @@ class ChatService:
         # Check LLM manager
         try:
             from app.core.llm_manager import llm_manager as llm
-            health['components']['gemini'] = 'enabled' if llm.gemini else 'disabled'
             health['components']['groq'] = 'enabled' if llm.groq else 'disabled'
+            health['components']['huggingface'] = 'enabled' if llm.huggingface else 'disabled'
         except Exception as e:
             health['components']['llm_manager'] = f'error: {str(e)}'
         
@@ -301,19 +300,17 @@ class ChatService:
         
         return health
 
-
 # ============================================================================
 # GLOBAL CHAT SERVICE INSTANCE
 # ============================================================================
-chat_service = ChatService()
 
+chat_service = ChatService()
 
 # ============================================================================
 # USAGE EXAMPLE (for reference)
 # ============================================================================
 """
 # In your API endpoint (chat.py):
-
 from app.services.chat_service import chat_service
 
 # Process user query
