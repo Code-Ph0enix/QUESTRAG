@@ -139,45 +139,47 @@ QUESTRAG addresses these challenges through:
 
 ### 🔧 Backend Setup (Local Development)
 
-Navigate to backend
+```bash
+# Navigate to backend
 cd backend
 
-Create virtual environment
+# Create virtual environment
 python -m venv venv
 
-Activate it
-source venv/bin/activate # Linux/Mac
-venv\Scripts\activate # Windows
+# Activate it
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
-Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-Create environment file
+# Create environment file
 cp .env.example .env
+# Edit .env with your credentials (see Configuration section)
 
-Edit .env with your credentials (see Configuration section)
-Build FAISS index (one-time setup)
+# Build FAISS index (one-time setup)
 python build_faiss_index.py
 
-Start backend server
+# Start backend server
 uvicorn app.main:app --reload --port 8000
-
+```
 
 ### 💻 Frontend Setup
 
-Navigate to frontend
+```bash
+# Navigate to frontend
 cd frontend
 
-Install dependencies
+# Install dependencies
 npm install
 
-Create environment file
+# Create environment file
 cp .env.example .env
+# Update VITE_API_URL to point to your backend
 
-Update VITE_API_URL to point to your backend
-Start dev server
+# Start dev server
 npm run dev
-
+```
 
 ---
 
@@ -211,12 +213,13 @@ npm run dev
 
 ### 🌐 Frontend `.env`
 
-Local development
+```bash
+# Local development
 VITE_API_URL=http://localhost:8000
 
-Production (HuggingFace Spaces)
+# Production (HuggingFace Spaces)
 VITE_API_URL=https://eeshanyaj-questrag-backend.hf.space
-
+```
 
 ---
 
@@ -226,10 +229,11 @@ VITE_API_URL=https://eeshanyaj-questrag-backend.hf.space
 
 #### Start Backend Server
 
+```bash
 cd backend
-source venv/bin/activate # or venv\Scripts\activate
+source venv/bin/activate  # or venv\Scripts\activate
 uvicorn app.main:app --reload --port 8000
-
+```
 
 - **Backend**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
@@ -237,9 +241,10 @@ uvicorn app.main:app --reload --port 8000
 
 #### Start Frontend Dev Server
 
+```bash
 cd frontend
 npm run dev
-
+```
 
 - **Frontend**: http://localhost:5173
 
@@ -257,47 +262,48 @@ npm run dev
 
 ## 📁 Project Structure
 
+```
 questrag/
 │
 ├── backend/
-│ ├── app/
-│ │ ├── api/v1/
-│ │ │ ├── auth.py # Auth endpoints (register, login)
-│ │ │ └── chat.py # Chat endpoints
-│ │ ├── core/
-│ │ │ ├── llm_manager.py # Groq + HF LLM orchestration
-│ │ │ └── security.py # JWT & password hashing
-│ │ ├── ml/
-│ │ │ ├── policy_network.py # RL Policy model (BERT)
-│ │ │ └── retriever.py # E5-base-v2 retriever
-│ │ ├── db/
-│ │ │ ├── mongodb.py # MongoDB connection
-│ │ │ └── repositories/ # User & conversation repos
-│ │ ├── services/
-│ │ │ └── chat_service.py # Orchestration logic
-│ │ ├── models/
-│ │ │ ├── best_policy_model.pth # Trained policy network
-│ │ │ ├── best_retriever_model.pth # Fine-tuned retriever
-│ │ │ └── faiss_index.pkl # FAISS vector store
-│ │ ├── data/
-│ │ │ └── final_knowledge_base.jsonl # 19,352 Q&A pairs
-│ │ ├── config.py # Settings & env vars
-│ │ └── main.py # FastAPI app entry point
-│ ├── Dockerfile # Docker config for HF Spaces
-│ ├── requirements.txt
-│ └── .env.example
+│   ├── app/
+│   │   ├── api/v1/
+│   │   │   ├── auth.py              # Auth endpoints (register, login)
+│   │   │   └── chat.py              # Chat endpoints
+│   │   ├── core/
+│   │   │   ├── llm_manager.py       # Groq + HF LLM orchestration
+│   │   │   └── security.py          # JWT & password hashing
+│   │   ├── ml/
+│   │   │   ├── policy_network.py    # RL Policy model (BERT)
+│   │   │   └── retriever.py         # E5-base-v2 retriever
+│   │   ├── db/
+│   │   │   ├── mongodb.py           # MongoDB connection
+│   │   │   └── repositories/        # User & conversation repos
+│   │   ├── services/
+│   │   │   └── chat_service.py      # Orchestration logic
+│   │   ├── models/
+│   │   │   ├── best_policy_model.pth      # Trained policy network
+│   │   │   ├── best_retriever_model.pth   # Fine-tuned retriever
+│   │   │   └── faiss_index.pkl            # FAISS vector store
+│   │   ├── data/
+│   │   │   └── final_knowledge_base.jsonl # 19,352 Q&A pairs
+│   │   ├── config.py                # Settings & env vars
+│   │   └── main.py                  # FastAPI app entry point
+│   ├── Dockerfile                   # Docker config for HF Spaces
+│   ├── requirements.txt
+│   └── .env.example
 │
 └── frontend/
-├── src/
-│ ├── components/ # UI Components
-│ ├── context/ # Auth Context
-│ ├── pages/ # Login, Register, Chat
-│ ├── services/api.js # Axios Client
-│ ├── App.jsx
-│ └── main.jsx
-├── package.json
-└── .env
-
+    ├── src/
+    │   ├── components/              # UI Components
+    │   ├── context/                 # Auth Context
+    │   ├── pages/                   # Login, Register, Chat
+    │   ├── services/api.js          # Axios Client
+    │   ├── App.jsx
+    │   └── main.jsx
+    ├── package.json
+    └── .env
+```
 
 ---
 
@@ -329,46 +335,58 @@ questrag/
 
 ---
 
+## 📈 Performance Metrics
+
+*Coming soon: Detailed performance metrics including accuracy, response time, token cost reduction, and user satisfaction scores.*
+
+---
+
 ## 📚 API Documentation
 
 ### Authentication
 
 #### Register
 
+```http
 POST /api/v1/auth/register
 Content-Type: application/json
 
 {
-"username": "john_doe",
-"email": "john@example.com",
-"password": "securepassword123"
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "securepassword123"
 }
-
+```
 
 **Response:**
 
+```json
 {
-"message": "User registered successfully",
-"user_id": "507f1f77bcf86cd799439011"
+  "message": "User registered successfully",
+  "user_id": "507f1f77bcf86cd799439011"
 }
+```
 
 #### Login
 
+```http
 POST /api/v1/auth/login
 Content-Type: application/json
 
 {
-"username": "john_doe",
-"password": "securepassword123"
+  "username": "john_doe",
+  "password": "securepassword123"
 }
-
+```
 
 **Response:**
 
+```json
 {
-"access_token": "eyJhbGciOiJIUzI1NiIs...",
-"token_type": "bearer"
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
 }
+```
 
 ---
 
@@ -376,62 +394,75 @@ Content-Type: application/json
 
 #### Send Message
 
+```http
 POST /api/v1/chat/
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-"query": "What are the interest rates for home loans?",
-"conversation_id": "optional-session-id"
+  "query": "What are the interest rates for home loans?",
+  "conversation_id": "optional-session-id"
 }
+```
 
 **Response:**
 
+```json
 {
-"response": "Current home loan interest rates range from 8.5% to 9.5% per annum...",
-"conversation_id": "abc123",
-"metadata": {
-"policy_action": "FETCH",
-"retrieval_score": 0.89,
-"documents_retrieved": 5,
-"llm_provider": "groq"
+  "response": "Current home loan interest rates range from 8.5% to 9.5% per annum...",
+  "conversation_id": "abc123",
+  "metadata": {
+    "policy_action": "FETCH",
+    "retrieval_score": 0.89,
+    "documents_retrieved": 5,
+    "llm_provider": "groq"
+  }
 }
-}
+```
 
 #### Get Conversation History
 
+```http
 GET /api/v1/chat/conversations/{conversation_id}
 Authorization: Bearer <token>
+```
 
 **Response:**
 
+```json
 {
-"conversation_id": "abc123",
-"messages": [
-{
-"role": "user",
-"content": "What are the interest rates?",
-"timestamp": "2025-11-28T10:30:00Z"
-},
-{
-"role": "assistant",
-"content": "Current rates are...",
-"timestamp": "2025-11-28T10:30:05Z",
-"metadata": {
-"policy_action": "FETCH"
+  "conversation_id": "abc123",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the interest rates?",
+      "timestamp": "2025-11-28T10:30:00Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Current rates are...",
+      "timestamp": "2025-11-28T10:30:05Z",
+      "metadata": {
+        "policy_action": "FETCH"
+      }
+    }
+  ]
 }
-}
-]
-}
+```
 
 #### List All Conversations
 
+```http
 GET /api/v1/chat/conversations
 Authorization: Bearer <token>
+```
 
 #### Delete Conversation
+
+```http
 DELETE /api/v1/chat/conversation/{conversation_id}
 Authorization: Bearer <token>
+```
 
 ---
 
@@ -448,30 +479,32 @@ The backend is deployed on HuggingFace Spaces using Docker:
 
 **Deployment Steps:**
 
+```bash
+# 1. Upload models to HuggingFace Hub
+huggingface-cli upload eeshanyaj/questrag_models \
+  app/models/best_policy_model.pth \
+  models/best_policy_model.pth
 
-1. Upload models to HuggingFace Hub
-huggingface-cli upload eeshanyaj/questrag_models
-app/models/best_policy_model.pth
-models/best_policy_model.pth
-
-2. Push backend code to HF Space
+# 2. Push backend code to HF Space
 git remote add space https://huggingface.co/spaces/eeshanyaj/questrag-backend
 git push space main
 
-3. Add environment secrets in HF Space Settings
-(MongoDB URI, Groq keys, JWT secret, etc.)
+# 3. Add environment secrets in HF Space Settings
+# (MongoDB URI, Groq keys, JWT secret, etc.)
+```
 
 ### Frontend Deployment (Vercel/Netlify)
 
-
-Build for production
+```bash
+# Build for production
 npm run build
 
-Deploy to Vercel
+# Deploy to Vercel
 vercel --prod
 
-Update .env.production with backend URL
+# Update .env.production with backend URL
 VITE_API_URL=https://eeshanyaj-questrag-backend.hf.space
+```
 
 ---
 
@@ -551,13 +584,13 @@ MIT License — see [LICENSE](LICENSE)
 
 ## 🔗 Links
 
-* **Live Backend API:** https://eeshanyaj-questrag-backend.hf.space
-* **API Documentation:** https://eeshanyaj-questrag-backend.hf.space/docs
-* **Health Check:** https://eeshanyaj-questrag-backend.hf.space/health
-* **HuggingFace Space:** https://huggingface.co/spaces/eeshanyaj/questrag-backend
-* **Model Repository:** https://huggingface.co/eeshanyaj/questrag_models
-* **Research Paper:** [AAAI 2024 Workshop](https://arxiv.org/abs/2401.06800)
-* **GitHub Repository:** [Coming Soon]
+- **Live Backend API:** https://eeshanyaj-questrag-backend.hf.space
+- **API Documentation:** https://eeshanyaj-questrag-backend.hf.space/docs
+- **Health Check:** https://eeshanyaj-questrag-backend.hf.space/health
+- **HuggingFace Space:** https://huggingface.co/spaces/eeshanyaj/questrag-backend
+- **Model Repository:** https://huggingface.co/eeshanyaj/questrag_models
+- **Research Paper:** [AAAI 2024 Workshop](https://arxiv.org/abs/2401.06800)
+- **GitHub Repository:** [Coming Soon]
 
 ---
 
