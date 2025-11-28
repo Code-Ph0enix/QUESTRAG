@@ -47,8 +47,8 @@ class Settings:
     GROQ_API_KEY_3: str = os.getenv("GROQ_API_KEY_3", "")  # Fallback 2
     
     # Model names for Groq (using correct GroqCloud naming)
-    GROQ_CHAT_MODEL: str = os.getenv("GROQ_CHAT_MODEL", "llama3-8b-8192")  # For chat interface
-    GROQ_EVAL_MODEL: str = os.getenv("GROQ_EVAL_MODEL", "llama3-70b-8192")  # For evaluation
+    GROQ_CHAT_MODEL: str = os.getenv("GROQ_CHAT_MODEL", "llama-3.1-8b-instant")  # For chat interface
+    GROQ_EVAL_MODEL: str = os.getenv("GROQ_EVAL_MODEL", "llama-3.3-70b-versatile")  # For evaluation
     
     # ========================================================================
     # Commented as of now, can be re-enabled if rate limiting is needed
@@ -191,9 +191,9 @@ class Settings:
             str: Model name for the task
         """
         if task == "evaluation":
-            return self.GROQ_EVAL_MODEL  # llama3-70b-8192
+            return self.GROQ_EVAL_MODEL  # llama-3.3-70b-versatile
         else:
-            return self.GROQ_CHAT_MODEL  # llama3-8b-8192
+            return self.GROQ_CHAT_MODEL  # llama-3.1-8b-instant
 
 # ============================================================================
 # CREATE GLOBAL SETTINGS INSTANCE

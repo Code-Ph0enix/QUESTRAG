@@ -262,7 +262,7 @@ GEMINI_REQUESTS_PER_MINUTE=60
 
 Optional: Groq API
 GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=llama3-70b-8192
+GROQ_MODEL=llama-3.3-70b-versatile
 GROQ_REQUESTS_PER_MINUTE=30
 
 Model Paths

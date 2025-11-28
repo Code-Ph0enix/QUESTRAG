@@ -35,8 +35,8 @@ class GroqManager:
     def __init__(self):
         """Initialize Groq manager with all available API keys"""
         self.api_keys = settings.get_groq_api_keys()
-        self.chat_model_name = settings.GROQ_CHAT_MODEL  # llama3-8b-8192
-        self.eval_model_name = settings.GROQ_EVAL_MODEL  # llama3-70b-8192
+        self.chat_model_name = settings.GROQ_CHAT_MODEL  # llama-3.1-8b-instant
+        self.eval_model_name = settings.GROQ_EVAL_MODEL  # llama-3.3-70b-versatile
         
         # Track current key index
         self.current_key_index = 0

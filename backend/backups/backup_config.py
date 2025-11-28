@@ -52,7 +52,7 @@ class Settings:
     # GROQ API (Optional - for evaluation)
     # ========================================================================
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     GROQ_REQUESTS_PER_MINUTE: int = int(os.getenv("GROQ_REQUESTS_PER_MINUTE", "30"))
     
     # ========================================================================
@@ -231,7 +231,7 @@ print("=" * 80)
 #     # GROQ API (Optional - for your llm_manager)
 #     # ========================================================================
 #     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-#     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+#     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     
 #     # ========================================================================
 #     # HUGGING FACE (Optional - for model downloads)
@@ -433,7 +433,7 @@ print("=" * 80)
 # #     # GROQ API (Optional - for your llm_manager)
 # #     # ========================================================================
 # #     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-# #     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+# #     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     
 # #     # ========================================================================
 # #     # HUGGING FACE (Optional - for model downloads)
@@ -563,7 +563,7 @@ print("=" * 80)
 #     # GROQ API (Optional - for your llm_manager)
 #     # ========================================================================
 #     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-#     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+#     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     
 #     # ========================================================================
 #     # HUGGING FACE (Optional - for model downloads)
