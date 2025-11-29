@@ -70,7 +70,7 @@ class Settings:
     # ========================================================================
     # MODEL PATHS (for RL Policy Network and RAG models)
     # ========================================================================
-    POLICY_MODEL_PATH: str = os.getenv("POLICY_MODEL_PATH", "app/models/best_policy_model.pth")
+    POLICY_MODEL_PATH: str = os.getenv("POLICY_MODEL_PATH", "app/models/policy_query_only.pt")
     RETRIEVER_MODEL_PATH: str = os.getenv("RETRIEVER_MODEL_PATH", "app/models/best_retriever_model.pth")
     FAISS_INDEX_PATH: str = os.getenv("FAISS_INDEX_PATH", "app/models/faiss_index.pkl")
     KB_PATH: str = os.getenv("KB_PATH", "app/data/final_knowledge_base.jsonl")

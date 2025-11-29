@@ -251,7 +251,7 @@ def load_policy_model() -> PolicyNetwork:
     if POLICY_MODEL is None:
         # Download model from HF Hub if needed (for deployment)
         settings.download_model_if_needed(
-            hf_filename="models/best_policy_model.pth",
+            hf_filename="models/policy_query_only.pt",
             local_path=settings.POLICY_MODEL_PATH
         )
         

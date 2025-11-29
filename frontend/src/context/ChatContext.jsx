@@ -1,93 +1,3 @@
-// import { createContext, useContext, useState } from 'react'
-// import { chatAPI } from '../services/api'
-
-// const ChatContext = createContext()
-
-// export const useChat = () => {
-//   const context = useContext(ChatContext)
-//   if (!context) {
-//     throw new Error('useChat must be used within ChatProvider')
-//   }
-//   return context
-// }
-
-// export const ChatProvider = ({ children }) => {
-//   const [messages, setMessages] = useState([])
-//   const [isLoading, setIsLoading] = useState(false)
-//   const [error, setError] = useState(null)
-//   const [conversations, setConversations] = useState([])
-
-//   const sendMessage = async (message, conversationId) => {
-//     try {
-//       setIsLoading(true)
-//       setError(null)
-
-//       // Add user message immediately
-//       const userMessage = {
-//         role: 'user',
-//         content: message,
-//         timestamp: new Date().toISOString(),
-//       }
-//       setMessages(prev => [...prev, userMessage])
-
-//       // Call API
-//       const response = await chatAPI.sendMessage(message, conversationId)
-
-//       // Add assistant response
-//       const assistantMessage = {
-//         role: 'assistant',
-//         content: response.response,
-//         timestamp: new Date().toISOString(),
-//         metadata: response.metadata || {},
-//       }
-//       setMessages(prev => [...prev, assistantMessage])
-
-//       return response
-//     } catch (err) {
-//       setError(err.message || 'Failed to send message')
-//       throw err
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
-
-//   const loadConversations = async () => {
-//     try {
-//       const data = await chatAPI.getConversations()
-//       setConversations(data.conversations || [])
-//     } catch (err) {
-//       console.error('Failed to load conversations:', err)
-//     }
-//   }
-
-//   const clearMessages = () => {
-//     setMessages([])
-//   }
-
-//   return (
-//     <ChatContext.Provider
-//       value={{
-//         messages,
-//         isLoading,
-//         error,
-//         conversations,
-//         sendMessage,
-//         loadConversations,
-//         clearMessages,
-//       }}
-//     >
-//       {children}
-//     </ChatContext.Provider>
-//   )
-// }
-
-
-
-
-
-
-
-
 import { createContext, useContext, useState } from 'react'
 import { chatAPI } from '../services/api'
 
@@ -106,11 +16,15 @@ export const ChatProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [conversations, setConversations] = useState([])
+  const [currentConversationId, setCurrentConversationId] = useState(null)
 
-  const sendMessage = async (message, conversationId) => {
+  const sendMessage = async (message, conversationId = null) => {
     try {
       setIsLoading(true)
       setError(null)
+
+      console.log('📤 Sending message:', { message, conversationId })
+      console.log('🔑 Token in localStorage:', !!localStorage.getItem('token'))
 
       // Add user message immediately
       const userMessage = {
@@ -120,22 +34,47 @@ export const ChatProvider = ({ children }) => {
       }
       setMessages(prev => [...prev, userMessage])
 
+      // Use current conversation ID if not provided
+      const convId = conversationId || currentConversationId
+
       // Call API
-      const response = await chatAPI.sendMessage(message, conversationId)
+      const response = await chatAPI.sendMessage(message, convId)
+      
+      console.log('✅ Response received:', response)
+
+      // Save conversation ID for next message
+      if (response.conversation_id) {
+        setCurrentConversationId(response.conversation_id)
+      }
 
       // Add assistant response
       const assistantMessage = {
         role: 'assistant',
         content: response.response,
-        timestamp: new Date().toISOString(),
-        metadata: response.metadata || {},
+        timestamp: response.timestamp || new Date().toISOString(),
+        metadata: {
+          policy_action: response.policy_action,
+          policy_confidence: response.policy_confidence,
+          documents_retrieved: response.documents_retrieved,
+          top_doc_score: response.top_doc_score,
+          total_time_ms: response.total_time_ms
+        }
       }
       setMessages(prev => [...prev, assistantMessage])
 
       return response
     } catch (err) {
-      setError(err.message || 'Failed to send message')
-      throw err
+      console.error('❌ Chat error:', err)
+      console.error('Error response:', err.response?.data)
+      console.error('Error status:', err.response?.status)
+      
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to send message'
+      setError(errorMessage)
+      
+      // Remove the user message if request failed
+      setMessages(prev => prev.slice(0, -1))
+      
+      throw new Error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -146,7 +85,6 @@ export const ChatProvider = ({ children }) => {
       const data = await chatAPI.getConversations()
       setConversations(data.conversations || [])
     } catch (err) {
-      // Silently fail - endpoint not implemented yet
       console.log('Conversation history not available yet')
       setConversations([])
     }
@@ -154,20 +92,22 @@ export const ChatProvider = ({ children }) => {
 
   const clearMessages = () => {
     setMessages([])
+    setCurrentConversationId(null)
+  }
+
+  const value = {
+    messages,
+    isLoading,
+    error,
+    conversations,
+    currentConversationId,
+    sendMessage,
+    loadConversations,
+    clearMessages,
   }
 
   return (
-    <ChatContext.Provider
-      value={{
-        messages,
-        isLoading,
-        error,
-        conversations,
-        sendMessage,
-        loadConversations,
-        clearMessages,
-      }}
-    >
+    <ChatContext.Provider value={value}>
       {children}
     </ChatContext.Provider>
   )
