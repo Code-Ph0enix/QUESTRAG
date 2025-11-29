@@ -40,41 +40,82 @@ class PolicyNetwork(nn.Module):
       * NO_FETCH + Bad: -0.5
     """
     
-    def __init__(self, model_name: str = "bert-base-uncased", dropout_rate: float = 0.1, use_multilayer: bool = True):
+    # def __init__(self, model_name: str = "bert-base-uncased", dropout_rate: float = 0.1, use_multilayer: bool = True):
+    #     super(PolicyNetwork, self).__init__()
+        
+    #     # Load pre-trained BERT
+    #     self.bert = AutoModel.from_pretrained(model_name)
+        
+    #     # Load tokenizer
+    #     self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        
+    #     # Add special tokens for actions: [FETCH] and [NO_FETCH]
+    #     special_tokens = {"additional_special_tokens": ["[FETCH]", "[NO_FETCH]"]}
+    #     self.tokenizer.add_special_tokens(special_tokens)
+        
+    #     # Resize BERT embeddings to accommodate new tokens
+    #     self.bert.resize_token_embeddings(len(self.tokenizer))
+        
+    #     # Initialize random embeddings for special tokens
+    #     self._init_action_embeddings()
+        
+    #     # ✅ FLEXIBLE CLASSIFIER ARCHITECTURE
+    #     if use_multilayer:
+    #         # Multi-layer classifier (your new trained model)
+    #         self.classifier = nn.Sequential(
+    #             nn.Linear(self.bert.config.hidden_size, 256),
+    #             nn.ReLU(),
+    #             nn.Dropout(dropout_rate),
+    #             nn.Linear(256, 2)
+    #         )
+    #     else:
+    #         # Single-layer classifier (fallback)
+    #         self.classifier = nn.Linear(self.bert.config.hidden_size, 2)
+        
+    #     # Dropout for regularization
+    #     self.dropout = nn.Dropout(dropout_rate)
+    
+
+    def __init__(self, model_name: str = "bert-base-uncased", dropout_rate: float = 0.1, use_multilayer: bool = True, hidden_size: int = 128):
         super(PolicyNetwork, self).__init__()
-        
-        # Load pre-trained BERT
+    
+    # Load pre-trained BERT
         self.bert = AutoModel.from_pretrained(model_name)
-        
-        # Load tokenizer
+    
+    # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        
-        # Add special tokens for actions: [FETCH] and [NO_FETCH]
+    
+    # Add special tokens for actions: [FETCH] and [NO_FETCH]
         special_tokens = {"additional_special_tokens": ["[FETCH]", "[NO_FETCH]"]}
         self.tokenizer.add_special_tokens(special_tokens)
-        
-        # Resize BERT embeddings to accommodate new tokens
+    
+    # Resize BERT embeddings to accommodate new tokens
         self.bert.resize_token_embeddings(len(self.tokenizer))
-        
-        # Initialize random embeddings for special tokens
+    
+    # Initialize random embeddings for special tokens
         self._init_action_embeddings()
-        
-        # ✅ FLEXIBLE CLASSIFIER ARCHITECTURE
+    
+    # ✅ FLEXIBLE CLASSIFIER ARCHITECTURE (with configurable hidden size)
         if use_multilayer:
-            # Multi-layer classifier (your new trained model)
+        # Multi-layer classifier with specified hidden size (128 or 256)
             self.classifier = nn.Sequential(
-                nn.Linear(self.bert.config.hidden_size, 256),
+                nn.Linear(self.bert.config.hidden_size, hidden_size),  # ✅ Use hidden_size param
                 nn.ReLU(),
                 nn.Dropout(dropout_rate),
-                nn.Linear(256, 2)
+                nn.Linear(hidden_size, 2)  # ✅ Use hidden_size param
             )
         else:
-            # Single-layer classifier (fallback)
+        # Single-layer classifier (fallback)
             self.classifier = nn.Linear(self.bert.config.hidden_size, 2)
-        
-        # Dropout for regularization
-        self.dropout = nn.Dropout(dropout_rate)
     
+    # Dropout for regularization
+        self.dropout = nn.Dropout(dropout_rate)
+
+
+
+
+
+
     def _init_action_embeddings(self):
         """
         Initialize random embeddings for [FETCH] and [NO_FETCH] tokens.
@@ -239,6 +280,80 @@ POLICY_MODEL: Optional[PolicyNetwork] = None
 POLICY_TOKENIZER: Optional[AutoTokenizer] = None
 
 
+# def load_policy_model() -> PolicyNetwork:
+#     """
+#     Load trained policy model (called once on startup).
+#     Downloads from HuggingFace Hub if not present locally.
+#     Uses module-level caching - model stays in RAM.
+    
+#     Returns:
+#         PolicyNetwork: Loaded policy model
+#     """
+#     global POLICY_MODEL, POLICY_TOKENIZER
+    
+#     if POLICY_MODEL is None:
+#         # Download model from HF Hub if needed (for deployment)
+#         settings.download_model_if_needed(
+#             hf_filename="models/policy_query_only.pt",
+#             local_path=settings.POLICY_MODEL_PATH
+#         )
+        
+#         print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+#         try:
+#             # Load checkpoint first to detect architecture
+#             checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
+            
+#             # ✅ AUTO-DETECT ARCHITECTURE from checkpoint keys
+#             has_multilayer = "classifier.0.weight" in checkpoint
+            
+#             print(f"📊 Detected architecture: {'Multi-layer' if has_multilayer else 'Single-layer'} classifier")
+            
+#             # Create model instance with correct architecture
+#             POLICY_MODEL = PolicyNetwork(
+#                 model_name="bert-base-uncased",
+#                 dropout_rate=0.1,
+#                 use_multilayer=has_multilayer  # ✅ Auto-detect!
+#             )
+            
+#             # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
+#             saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
+#             current_vocab_size = len(POLICY_MODEL.tokenizer)
+            
+#             if saved_vocab_size != current_vocab_size:
+#                 print(f"⚠️ Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
+#                 print(f"✅ Resizing tokenizer and embeddings to match saved model...")
+#                 # Resize model to match saved checkpoint
+#                 POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
+            
+#             # Move to device
+#             POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+            
+#             # Now load trained weights (sizes and architecture will match!)
+#             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+#                 POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+#             else:
+#                 POLICY_MODEL.load_state_dict(checkpoint)
+            
+#             # Set to evaluation mode
+#             POLICY_MODEL.eval()
+            
+#             # Cache tokenizer
+#             POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+            
+#             print("✅ Policy network loaded and cached")
+            
+#         except FileNotFoundError:
+#             print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
+#             print(f"⚠️ Make sure models are uploaded to HuggingFace Hub: {settings.HF_MODEL_REPO}")
+#             raise
+#         except Exception as e:
+#             print(f"❌ Failed to load policy model: {e}")
+#             import traceback
+#             traceback.print_exc()
+#             raise
+    
+#     return POLICY_MODEL
+
 def load_policy_model() -> PolicyNetwork:
     """
     Load trained policy model (called once on startup).
@@ -265,13 +380,20 @@ def load_policy_model() -> PolicyNetwork:
             # ✅ AUTO-DETECT ARCHITECTURE from checkpoint keys
             has_multilayer = "classifier.0.weight" in checkpoint
             
-            print(f"📊 Detected architecture: {'Multi-layer' if has_multilayer else 'Single-layer'} classifier")
+            # ✅ AUTO-DETECT HIDDEN SIZE from checkpoint
+            if has_multilayer:
+                hidden_size = checkpoint['classifier.0.weight'].shape[0]  # Get output size of first layer
+                print(f"📊 Detected: Multi-layer classifier (hidden_size={hidden_size})")
+            else:
+                hidden_size = 768  # Doesn't matter for single-layer
+                print(f"📊 Detected: Single-layer classifier")
             
             # Create model instance with correct architecture
             POLICY_MODEL = PolicyNetwork(
                 model_name="bert-base-uncased",
                 dropout_rate=0.1,
-                use_multilayer=has_multilayer  # ✅ Auto-detect!
+                use_multilayer=has_multilayer,
+                hidden_size=hidden_size  # ✅ Pass detected hidden size
             )
             
             # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
@@ -312,6 +434,7 @@ def load_policy_model() -> PolicyNetwork:
             raise
     
     return POLICY_MODEL
+
 
 
 # ============================================================================
