@@ -15,7 +15,9 @@ import torch.nn.functional as F
 import numpy as np
 from typing import List, Dict, Optional, Tuple
 from transformers import AutoTokenizer, AutoModel
+
 from app.config import settings
+
 
 # ============================================================================
 # POLICY NETWORK (From RL.py)
@@ -35,12 +37,12 @@ class PolicyNetwork(nn.Module):
     - Loss: Policy Gradient + Entropy Regularization
     - Optimizer: AdamW
     - Reward structure:
-      * FETCH: +0.5 (always)
-      * NO_FETCH + Good: +2.0
-      * NO_FETCH + Bad: -0.5
+        * FETCH: +0.5 (always)
+        * NO_FETCH + Good: +2.0
+        * NO_FETCH + Bad: -0.5
     """
     
-    def __init__(self, model_name: str = "bert-base-uncased", dropout_rate: float = 0.1, use_multilayer: bool = True):
+    def __init__(self, model_name: str = "bert-base-uncased", dropout_rate: float = 0.1):
         super(PolicyNetwork, self).__init__()
         
         # Load pre-trained BERT
@@ -59,18 +61,8 @@ class PolicyNetwork(nn.Module):
         # Initialize random embeddings for special tokens
         self._init_action_embeddings()
         
-        # ✅ FLEXIBLE CLASSIFIER ARCHITECTURE
-        if use_multilayer:
-            # Multi-layer classifier (your new trained model)
-            self.classifier = nn.Sequential(
-                nn.Linear(self.bert.config.hidden_size, 256),
-                nn.ReLU(),
-                nn.Dropout(dropout_rate),
-                nn.Linear(256, 2)
-            )
-        else:
-            # Single-layer classifier (fallback)
-            self.classifier = nn.Linear(self.bert.config.hidden_size, 2)
+        # Classification head: BERT hidden size (768) → 2 classes
+        self.classifier = nn.Linear(self.bert.config.hidden_size, 2)
         
         # Dropout for regularization
         self.dropout = nn.Dropout(dropout_rate)
@@ -122,8 +114,8 @@ class PolicyNetwork(nn.Module):
         return logits, probs
     
     def encode_state(
-        self,
-        state: Dict,
+        self, 
+        state: Dict, 
         max_length: int = None
     ) -> Dict[str, torch.Tensor]:
         """
@@ -137,7 +129,7 @@ class PolicyNetwork(nn.Module):
         }
         
         Encoding format:
-        "Previous query 1: [Action: [FETCH]] Previous query 2: [Action: [NO_FETCH]] Current query: <query>"
+        "Previous query 1: <text> [Action: [FETCH]] Previous query 2: <text> [Action: [NO_FETCH]] Current query: <text>"
         
         Args:
             state: State dictionary
@@ -176,9 +168,9 @@ class PolicyNetwork(nn.Module):
         return encoding
     
     def predict_action(
-        self,
-        state: Dict,
-        use_dropout: bool = False,
+        self, 
+        state: Dict, 
+        use_dropout: bool = False, 
         num_samples: int = 10
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """
@@ -220,14 +212,15 @@ class PolicyNetwork(nn.Module):
         else:
             # Standard inference (no uncertainty estimation)
             self.eval()
+            
             with torch.no_grad():
                 encoding = self.encode_state(state)
                 input_ids = encoding['input_ids'].to(device)
                 attention_mask = encoding['attention_mask'].to(device)
                 
                 _, probs = self.forward(input_ids, attention_mask)
-                
-                return probs.cpu().numpy(), None
+            
+            return probs.cpu().numpy(), None
 
 
 # ============================================================================
@@ -238,6 +231,11 @@ class PolicyNetwork(nn.Module):
 POLICY_MODEL: Optional[PolicyNetwork] = None
 POLICY_TOKENIZER: Optional[AutoTokenizer] = None
 
+
+
+# =============================================================================================
+# Latest version given by perplexity, should work, if not then use one of the other versions.
+# =============================================================================================
 
 def load_policy_model() -> PolicyNetwork:
     """
@@ -258,20 +256,15 @@ def load_policy_model() -> PolicyNetwork:
         )
         
         print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+        
         try:
-            # Load checkpoint first to detect architecture
+            # Load checkpoint first to get vocab size
             checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
             
-            # ✅ AUTO-DETECT ARCHITECTURE from checkpoint keys
-            has_multilayer = "classifier.0.weight" in checkpoint
-            
-            print(f"📊 Detected architecture: {'Multi-layer' if has_multilayer else 'Single-layer'} classifier")
-            
-            # Create model instance with correct architecture
+            # Create model instance
             POLICY_MODEL = PolicyNetwork(
                 model_name="bert-base-uncased",
-                dropout_rate=0.1,
-                use_multilayer=has_multilayer  # ✅ Auto-detect!
+                dropout_rate=0.1
             )
             
             # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
@@ -287,7 +280,7 @@ def load_policy_model() -> PolicyNetwork:
             # Move to device
             POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
             
-            # Now load trained weights (sizes and architecture will match!)
+            # Now load trained weights (sizes will match!)
             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
                 POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
             else:
@@ -307,11 +300,171 @@ def load_policy_model() -> PolicyNetwork:
             raise
         except Exception as e:
             print(f"❌ Failed to load policy model: {e}")
-            import traceback
-            traceback.print_exc()
             raise
     
     return POLICY_MODEL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ===========================================================================
+# This version is used in the code, atleast for localhost testing
+# ===========================================================================
+
+# def load_policy_model() -> PolicyNetwork:
+#     """
+#     Load trained policy model (called once on startup).
+#     Uses module-level caching - model stays in RAM.
+    
+#     Returns:
+#         PolicyNetwork: Loaded policy model
+#     """
+#     global POLICY_MODEL, POLICY_TOKENIZER
+    
+#     if POLICY_MODEL is None:
+#         print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+        
+#         try:
+#             # Load checkpoint first to get vocab size
+#             checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
+            
+#             # Create model instance
+#             POLICY_MODEL = PolicyNetwork(
+#                 model_name="bert-base-uncased",
+#                 dropout_rate=0.1
+#             )
+            
+#             # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
+#             saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
+#             current_vocab_size = len(POLICY_MODEL.tokenizer)
+            
+#             if saved_vocab_size != current_vocab_size:
+#                 print(f"⚠️  Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
+#                 print(f"✅ Resizing tokenizer and embeddings to match saved model...")
+                
+#                 # Resize model to match saved checkpoint
+#                 POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
+            
+#             # Move to device
+#             POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+            
+#             # Now load trained weights (sizes will match!)
+#             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+#                 POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+#             else:
+#                 POLICY_MODEL.load_state_dict(checkpoint)
+            
+#             # Set to evaluation mode
+#             POLICY_MODEL.eval()
+            
+#             # Cache tokenizer
+#             POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+            
+#             print("✅ Policy network loaded and cached")
+        
+#         except FileNotFoundError:
+#             print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
+#             print("⚠️  You need to train the policy network first!")
+#             raise
+        
+#         except Exception as e:
+#             print(f"❌ Failed to load policy model: {e}")
+#             raise
+    
+#     return POLICY_MODEL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =====================================================================================
+# This is the older version or proably a different version, potentially still useful
+# =====================================================================================
+
+# def load_policy_model() -> PolicyNetwork:
+#     """
+#     Load trained policy model (called once on startup).
+#     Uses module-level caching - model stays in RAM.
+    
+#     Returns:
+#         PolicyNetwork: Loaded policy model
+#     """
+#     global POLICY_MODEL, POLICY_TOKENIZER
+    
+#     if POLICY_MODEL is None:
+#         print(f"Loading policy network from {settings.POLICY_MODEL_PATH}...")
+        
+#         try:
+#             # Create model instance
+#             POLICY_MODEL = PolicyNetwork(
+#                 model_name="bert-base-uncased",
+#                 dropout_rate=0.1
+#             ).to(settings.DEVICE)
+            
+#             # Load trained weights
+#             checkpoint = torch.load(settings.POLICY_MODEL_PATH, map_location=settings.DEVICE)
+            
+#             # Handle different checkpoint formats
+#             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+#                 # Full checkpoint with metadata
+#                 POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+#             else:
+#                 # Just state dict
+#                 POLICY_MODEL.load_state_dict(checkpoint)
+            
+#             # Set to evaluation mode
+#             POLICY_MODEL.eval()
+            
+#             # Cache tokenizer
+#             POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+            
+#             print("✅ Policy network loaded and cached")
+        
+#         except FileNotFoundError:
+#             print(f"❌ Policy model file not found: {settings.POLICY_MODEL_PATH}")
+#             print("⚠️  You need to train the policy network first!")
+#             raise
+        
+#         except Exception as e:
+#             print(f"❌ Failed to load policy model: {e}")
+#             raise
+    
+#     return POLICY_MODEL
+
+
+
+
+
+
+
 
 
 # ============================================================================
@@ -319,7 +472,7 @@ def load_policy_model() -> PolicyNetwork:
 # ============================================================================
 
 def create_state_from_history(
-    current_query: str,
+    current_query: str, 
     conversation_history: List[Dict],
     max_history: int = 2
 ) -> Dict:
@@ -366,7 +519,7 @@ def create_state_from_history(
 
 
 def predict_policy_action(
-    query: str,
+    query: str, 
     history: List[Dict] = None,
     return_probs: bool = False
 ) -> Dict:
@@ -380,13 +533,13 @@ def predict_policy_action(
     
     Returns:
         dict: Prediction results
-        {
-            'action': 'FETCH' or 'NO_FETCH',
-            'confidence': float (0-1),
-            'fetch_prob': float,
-            'no_fetch_prob': float,
-            'should_retrieve': bool
-        }
+            {
+                'action': 'FETCH' or 'NO_FETCH',
+                'confidence': float (0-1),
+                'fetch_prob': float,
+                'no_fetch_prob': float,
+                'should_retrieve': bool
+            }
     """
     # Load model (cached after first call)
     model = load_policy_model()
@@ -431,6 +584,7 @@ def predict_policy_action(
 # ============================================================================
 """
 # In your service file:
+
 from app.ml.policy_network import predict_policy_action
 
 # Predict action
