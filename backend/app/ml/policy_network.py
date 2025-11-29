@@ -396,30 +396,57 @@ def load_policy_model() -> PolicyNetwork:
                 hidden_size=hidden_size  # ✅ Pass detected hidden size
             )
             
-            # **KEY FIX**: Resize model embeddings to match saved checkpoint BEFORE loading weights
+            # **KEY FIX**: Handle vocab size mismatch
             saved_vocab_size = checkpoint['bert.embeddings.word_embeddings.weight'].shape[0]
             current_vocab_size = len(POLICY_MODEL.tokenizer)
-            
+
             if saved_vocab_size != current_vocab_size:
                 print(f"⚠️ Vocab size mismatch: saved={saved_vocab_size}, current={current_vocab_size}")
-                print(f"✅ Resizing tokenizer and embeddings to match saved model...")
-                # Resize model to match saved checkpoint
-                POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
-            
-            # Move to device
-            POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
-            
-            # Now load trained weights (sizes and architecture will match!)
-            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-                POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+    
+                if abs(saved_vocab_size - current_vocab_size) <= 2:
+                    # Small difference - just load with strict=False
+                    print(f"✅ Loading with strict=False to handle minor vocab differences...")
+        
+                    # Move to device first
+                    POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+        
+                    # Load weights with strict=False
+                    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                        POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'], strict=False)
+                    else:
+                        POLICY_MODEL.load_state_dict(checkpoint, strict=False)
+                else:
+                    # Large difference - resize properly
+                    print(f"✅ Resizing model to match saved vocab size...")
+                    POLICY_MODEL.bert.resize_token_embeddings(saved_vocab_size)
+        
+                    # Move to device
+                    POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+        
+                    # Load weights
+                    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                        POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+                    else:
+                        POLICY_MODEL.load_state_dict(checkpoint)
             else:
-                POLICY_MODEL.load_state_dict(checkpoint)
-            
-            # Set to evaluation mode
+            # No mismatch
+                POLICY_MODEL = POLICY_MODEL.to(settings.DEVICE)
+    
+                if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                    POLICY_MODEL.load_state_dict(checkpoint['model_state_dict'])
+                else:
+                    POLICY_MODEL.load_state_dict(checkpoint)
+
+# Set to evaluation mode
             POLICY_MODEL.eval()
-            
-            # Cache tokenizer
+
+# Cache tokenizer
             POLICY_TOKENIZER = POLICY_MODEL.tokenizer
+
+            print("✅ Policy network loaded and cached")
+            print(f"   Model vocab size: {POLICY_MODEL.bert.embeddings.word_embeddings.num_embeddings}")
+            print(f"   Tokenizer vocab size: {len(POLICY_MODEL.tokenizer)}")
+
             
             print("✅ Policy network loaded and cached")
             
