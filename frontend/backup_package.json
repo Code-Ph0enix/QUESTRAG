@@ -4,12 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode development",
+    "dev": "vite",
     "build": "vite build",
-    "build:prod": "vite build --mode production",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{js,jsx,json,css,md}\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.6.2",

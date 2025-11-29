@@ -14,9 +14,13 @@ dist-ssr
 *.local
 
 # Environment Variables
+.env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
 
 # Editor directories and files
@@ -39,3 +43,9 @@ out
 # Testing
 coverage
 .nyc_output
+
+# Misc
+.turbo
+.cache
+.parcel-cache
+.sass-cache

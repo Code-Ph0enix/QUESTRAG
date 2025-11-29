@@ -38,49 +38,96 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token])
 
+  // const login = async (email, password) => {
+  //   try {
+  //     const response = await api.auth.login(email, password)
+  //     const { access_token, user: userData } = response
+      
+  //     // Save token and user
+  //     localStorage.setItem('token', access_token)
+  //     setToken(access_token)
+  //     setUser(userData)
+      
+  //     // Navigate to chat
+  //     navigate('/chat')
+      
+  //     return { success: true }
+  //   } catch (error) {
+  //     return { 
+  //       success: false, 
+  //       error: error.response?.data?.detail || 'Login failed' 
+  //     }
+  //   }
+  // }
   const login = async (email, password) => {
-    try {
-      const response = await api.auth.login(email, password)
-      const { access_token, user: userData } = response
-      
-      // Save token and user
-      localStorage.setItem('token', access_token)
-      setToken(access_token)
-      setUser(userData)
-      
-      // Navigate to chat
-      navigate('/chat')
-      
-      return { success: true }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
-      }
+  try {
+    const response = await api.auth.login(email, password)
+    const { access_token, user: userData } = response
+    
+    // Save token and user
+    localStorage.setItem('token', access_token)
+    setToken(access_token)
+    setUser(userData)
+    
+    // Navigate to chat
+    navigate('/chat')
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Login error:', error.response?.data)  // ✅ Added debug log
+    return { 
+      success: false, 
+      error: error.response?.data?.detail || error.response?.data?.message || 'Login failed' 
     }
   }
+}
+
+
+  // const signup = async (email, password, fullName) => {
+  //   try {
+  //     const response = await api.auth.register(email, password, fullName)
+  //     const { access_token, user: userData } = response
+      
+  //     // Save token and user
+  //     localStorage.setItem('token', access_token)
+  //     setToken(access_token)
+  //     setUser(userData)
+      
+  //     // Navigate to chat
+  //     navigate('/chat')
+      
+  //     return { success: true }
+  //   } catch (error) {
+  //     return { 
+  //       success: false, 
+  //       error: error.response?.data?.detail || 'Signup failed' 
+  //     }
+  //   }
+  // }
 
   const signup = async (email, password, fullName) => {
-    try {
-      const response = await api.auth.register(email, password, fullName)
-      const { access_token, user: userData } = response
-      
-      // Save token and user
-      localStorage.setItem('token', access_token)
-      setToken(access_token)
-      setUser(userData)
-      
-      // Navigate to chat
-      navigate('/chat')
-      
-      return { success: true }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'Signup failed' 
-      }
+  try {
+    const response = await api.auth.register(email, password, fullName)
+    const { access_token, user: userData } = response
+    
+    // Save token and user
+    localStorage.setItem('token', access_token)
+    setToken(access_token)
+    setUser(userData)
+    
+    // Navigate to chat
+    navigate('/chat')
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Signup error:', error.response?.data)  // ✅ Added debug log
+    return { 
+      success: false, 
+      error: error.response?.data?.detail || error.response?.data?.message || 'Signup failed' 
     }
   }
+}
+
 
   const logout = () => {
     localStorage.removeItem('token')

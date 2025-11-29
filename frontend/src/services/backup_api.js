@@ -1,7 +1,6 @@
 import axios from 'axios'
 
-// Get base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://eeshanyaj-questrag-backend.hf.space'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://eeshanyaj-questrag-backend.hf.space'
 
 // Create axios instance
 const api = axios.create({
@@ -37,39 +36,6 @@ api.interceptors.response.use(
   }
 )
 
-// // ============================================================================
-// // AUTH API
-// // ============================================================================
-
-// export const authAPI = {
-//   register: async (username, email, password) => {
-//     const response = await api.post('/api/v1/auth/register', {
-//       username,
-//       email,
-//       password
-//     })
-//     return response.data
-//   },
-
-//   login: async (username, password) => {
-//     const response = await api.post('/api/v1/auth/login', {
-//       username,
-//       password
-//     })
-//     return response.data
-//   },
-
-//   me: async () => {
-//     const response = await api.get('/api/v1/auth/me')
-//     return response.data
-//   },
-
-//   logout: async () => {
-//     const response = await api.post('/api/v1/auth/logout')
-//     return response.data
-//   }
-// }
-
 // ============================================================================
 // AUTH API
 // ============================================================================
@@ -79,7 +45,7 @@ export const authAPI = {
     const response = await api.post('/api/v1/auth/register', {
       email,
       password,
-      full_name: fullName  // ✅ Changed to full_name to match backend
+      full_name: fullName
     })
     return response.data
   },
@@ -103,7 +69,6 @@ export const authAPI = {
   }
 }
 
-
 // ============================================================================
 // CHAT API
 // ============================================================================
@@ -118,7 +83,7 @@ export const chatAPI = {
   },
 
   getHistory: async (conversationId) => {
-    const response = await api.get(`/api/v1/chat/conversations/${conversationId}`)
+    const response = await api.get(`/api/v1/chat/history/${conversationId}`)
     return response.data
   },
 

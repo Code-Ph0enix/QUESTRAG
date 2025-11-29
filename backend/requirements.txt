@@ -74,6 +74,6 @@ transformers
 
 # Authentication
 python-jose[cryptography]
-passlib[bcrypt]
+passlib[bcrypt]==1.7.4
 python-multipart
-bcrypt
+bcrypt==4.0.1

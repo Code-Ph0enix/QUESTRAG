@@ -67,7 +67,7 @@ const Signup = () => {
             </p>
           </div>
 
-          {/* Error Message */}
+          {/* Error Message
           {error && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -76,7 +76,17 @@ const Signup = () => {
             >
               {error}
             </motion.div>
-          )}
+          )} */}
+{/* Error Message */}
+{error && (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm"
+  >
+    {typeof error === 'string' ? error : error.message || 'An error occurred'}
+  </motion.div>
+)}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

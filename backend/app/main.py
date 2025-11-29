@@ -62,10 +62,10 @@ async def lifespan(app: FastAPI):
     
     print("\n✅ Backend startup complete!")
     print("=" * 80)
-    print(f"📖 API Docs: http://localhost:8000/docs")
-    print(f"🏥 Health Check: http://localhost:8000/health")
-    print(f"🔐 Register: POST http://localhost:8000/api/v1/auth/register")
-    print(f"🔑 Login: POST http://localhost:8000/api/v1/auth/login")
+    print(f"📖 API Docs: https://eeshanyaj-questrag-backend.hf.space/docs")
+    print(f"🏥 Health Check: https://eeshanyaj-questrag-backend.hf.space/health")
+    print(f"🧠 Backend Link: https://eeshanyaj-questrag-backend.hf.space/")
+    # print(f"🔑 Login: POST http://localhost:8000/api/v1/auth/login")
     print("=" * 80 + "\n")
     
     yield  # Application runs here
