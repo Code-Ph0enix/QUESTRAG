@@ -288,12 +288,9 @@ def load_retriever() -> CustomRetrieverModel:
     
 #     return RETRIEVER_MODEL
 
-
-
-# =============================================================================================
+# ==================================================================================================
 # Latest version given by perplexity, should work, if not then use one of the other versions.
-# =============================================================================================
-
+# ==================================================================================================
 def load_faiss_index():
     """
     Load FAISS index + knowledge base from pickle file.
@@ -321,9 +318,27 @@ def load_faiss_index():
         print(f"Loading FAISS index from {settings.FAISS_INDEX_PATH}...")
         
         try:
-            # Load pickled FAISS index + KB data
+            # Load pickled data
             with open(settings.FAISS_INDEX_PATH, 'rb') as f:
-                FAISS_INDEX, KB_DATA = pickle.load(f)
+                loaded_data = pickle.load(f)
+            
+            # ✅ Handle both formats: (index, kb_data) OR (index_bytes, kb_data)
+            if isinstance(loaded_data, tuple) and len(loaded_data) == 2:
+                first_item, KB_DATA = loaded_data
+                
+                # Check if first item is bytes (new format) or FAISS index (old format)
+                if isinstance(first_item, bytes):
+                    # New format: deserialize bytes
+                    print("📦 Detected new format (serialized bytes)")
+                    FAISS_INDEX = faiss.deserialize_index(first_item)
+                elif hasattr(first_item, 'ntotal'):
+                    # Old format: direct FAISS index object
+                    print("📦 Detected old format (direct index)")
+                    FAISS_INDEX = first_item
+                else:
+                    raise ValueError(f"Unknown FAISS index format: {type(first_item)}")
+            else:
+                raise ValueError(f"Invalid pickle format: expected tuple, got {type(loaded_data)}")
             
             print(f"✅ FAISS index loaded: {FAISS_INDEX.ntotal} vectors")
             print(f"✅ Knowledge base loaded: {len(KB_DATA)} documents")
@@ -334,9 +349,60 @@ def load_faiss_index():
             raise
         except Exception as e:
             print(f"❌ Failed to load FAISS index: {e}")
+            import traceback
+            traceback.print_exc()
             raise
     
     return FAISS_INDEX, KB_DATA
+
+
+# ==================================================================================================
+# Second Latest version given by perplexity, should work, if not then use one of the other versions.
+# ==================================================================================================
+
+# def load_faiss_index():
+#     """
+#     Load FAISS index + knowledge base from pickle file.
+#     Downloads from HuggingFace Hub if not present locally.
+#     Uses module-level caching - loaded once on startup.
+    
+#     Returns:
+#         tuple: (faiss.Index, List[Dict]) - FAISS index and KB data
+#     """
+#     global FAISS_INDEX, KB_DATA
+    
+#     if FAISS_INDEX is None or KB_DATA is None:
+#         # Download FAISS index from HF Hub if needed (for deployment)
+#         settings.download_model_if_needed(
+#             hf_filename="models/faiss_index.pkl",
+#             local_path=settings.FAISS_INDEX_PATH
+#         )
+        
+#         # Download knowledge base from HF Hub if needed (for deployment)
+#         settings.download_model_if_needed(
+#             hf_filename="data/final_knowledge_base.jsonl",
+#             local_path=settings.KB_PATH
+#         )
+        
+#         print(f"Loading FAISS index from {settings.FAISS_INDEX_PATH}...")
+        
+#         try:
+#             # Load pickled FAISS index + KB data
+#             with open(settings.FAISS_INDEX_PATH, 'rb') as f:
+#                 FAISS_INDEX, KB_DATA = pickle.load(f)
+            
+#             print(f"✅ FAISS index loaded: {FAISS_INDEX.ntotal} vectors")
+#             print(f"✅ Knowledge base loaded: {len(KB_DATA)} documents")
+            
+#         except FileNotFoundError:
+#             print(f"❌ FAISS index file not found: {settings.FAISS_INDEX_PATH}")
+#             print(f"⚠️ Make sure models are uploaded to HuggingFace Hub: {settings.HF_MODEL_REPO}")
+#             raise
+#         except Exception as e:
+#             print(f"❌ Failed to load FAISS index: {e}")
+#             raise
+    
+#     return FAISS_INDEX, KB_DATA
 
 
 
