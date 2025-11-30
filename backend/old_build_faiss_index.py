@@ -1,21 +1,24 @@
 """
-Build FAISS Index from Scratch - COMPATIBLE VERSION
-Creates faiss_index.pkl with proper serialization for version compatibility
+Build FAISS Index from Scratch
+Creates faiss_index.pkl from your knowledge base and trained retriever model
 
 Run this ONCE before starting the backend:
     python build_faiss_index.py
 
 Author: Banking RAG Chatbot
-Date: November 2025
+Date: October 2025
 """
 
-# Suppress warnings
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-import warnings
-warnings.filterwarnings('ignore')
 
+# Add these lines at the very top (after docstring)
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow info/warnings
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN messages
+
+import warnings
+warnings.filterwarnings('ignore')  # Suppress all warnings
+
+import os
 import pickle
 import json
 import torch
@@ -26,6 +29,7 @@ import numpy as np
 from pathlib import Path
 from transformers import AutoTokenizer, AutoModel
 from typing import List
+
 
 # ============================================================================
 # CONFIGURATION - UPDATE THESE PATHS!
@@ -45,6 +49,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Batch size for encoding (reduce if you get OOM errors)
 BATCH_SIZE = 32
+
 
 # ============================================================================
 # CUSTOM SENTENCE TRANSFORMER (Same as retriever.py)
@@ -82,6 +87,7 @@ class CustomSentenceTransformer(nn.Module):
     def encode(self, sentences: List[str], batch_size: int = 32) -> np.ndarray:
         """Encode sentences - same as training"""
         self.eval()
+        
         if isinstance(sentences, str):
             sentences = [sentences]
         
@@ -89,6 +95,7 @@ class CustomSentenceTransformer(nn.Module):
         processed_sentences = [f"query: {s.strip()}" for s in sentences]
         
         all_embeddings = []
+        
         with torch.no_grad():
             for i in range(0, len(processed_sentences), batch_size):
                 batch_sentences = processed_sentences[i:i + batch_size]
@@ -108,6 +115,7 @@ class CustomSentenceTransformer(nn.Module):
         
         return np.vstack(all_embeddings)
 
+
 # ============================================================================
 # RETRIEVER MODEL (Wrapper)
 # ============================================================================
@@ -118,6 +126,7 @@ class RetrieverModel:
     def __init__(self, model_path: str, device: str = "cpu"):
         print(f"\n🤖 Loading retriever model...")
         print(f"   Device: {device}")
+        
         self.device = device
         self.model = CustomSentenceTransformer("intfloat/e5-base-v2").to(device)
         
@@ -128,7 +137,7 @@ class RetrieverModel:
             self.model.load_state_dict(state_dict)
             print(f"   ✅ Trained weights loaded")
         except Exception as e:
-            print(f"   ⚠️ Warning: Could not load trained weights: {e}")
+            print(f"   ⚠️  Warning: Could not load trained weights: {e}")
             print(f"   Using base e5-base-v2 model instead")
         
         self.model.eval()
@@ -136,6 +145,7 @@ class RetrieverModel:
     def encode_documents(self, documents: List[str], batch_size: int = 32) -> np.ndarray:
         """Encode documents"""
         return self.model.encode(documents, batch_size=batch_size)
+
 
 # ============================================================================
 # MAIN: BUILD FAISS INDEX
@@ -165,7 +175,7 @@ def build_faiss_index():
             try:
                 kb_data.append(json.loads(line))
             except json.JSONDecodeError as e:
-                print(f"   ⚠️ Warning: Skipping invalid JSON on line {line_num}: {e}")
+                print(f"   ⚠️  Warning: Skipping invalid JSON on line {line_num}: {e}")
     
     print(f"   ✅ Loaded {len(kb_data)} documents")
     
@@ -192,7 +202,7 @@ def build_faiss_index():
         elif response:
             text = response
         else:
-            print(f"   ⚠️ Warning: Document {i} has no content, using placeholder")
+            print(f"   ⚠️  Warning: Document {i} has no content, using placeholder")
             text = "empty document"
         
         documents.append(text)
@@ -229,7 +239,7 @@ def build_faiss_index():
         return False
     
     # ========================================================================
-    # STEP 4: BUILD FAISS INDEX WITH PROPER SERIALIZATION
+    # STEP 4: BUILD FAISS INDEX
     # ========================================================================
     print(f"\n🔍 STEP 4: Building FAISS index...")
     
@@ -237,7 +247,6 @@ def build_faiss_index():
     print(f"   Dimension: {dimension}")
     
     # Create FAISS index (Inner Product = Cosine similarity after normalization)
-    print(f"   Creating IndexFlatIP...")
     index = faiss.IndexFlatIP(dimension)
     
     # Normalize embeddings for cosine similarity
@@ -252,31 +261,24 @@ def build_faiss_index():
     print(f"   Total vectors: {index.ntotal}")
     
     # ========================================================================
-    # STEP 5: SAVE WITH PROPER FAISS SERIALIZATION (VERSION COMPATIBLE!)
+    # STEP 5: SAVE AS PICKLE FILE
     # ========================================================================
-    print(f"\n💾 STEP 5: Saving with FAISS serialization (version-compatible)...")
+    print(f"\n💾 STEP 5: Saving as pickle file...")
     
     # Create models directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PKL_FILE), exist_ok=True)
     
-    # ✅ PROPER WAY: Serialize FAISS index to bytes first
-    print(f"   Serializing FAISS index to bytes...")
+    # Save tuple of (index, kb_data)
+    print(f"   Pickling (index, kb_data) tuple...")
     try:
-        # Write FAISS index to bytes (works across FAISS versions!)
-        index_bytes = faiss.serialize_index(index)
-        
-        # Now pickle the bytes + kb_data
-        print(f"   Pickling (index_bytes, kb_data) tuple...")
         with open(OUTPUT_PKL_FILE, 'wb') as f:
-            pickle.dump((index_bytes, kb_data), f, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump((index, kb_data), f)
         
         file_size_mb = Path(OUTPUT_PKL_FILE).stat().st_size / (1024 * 1024)
         print(f"   ✅ Saved: {OUTPUT_PKL_FILE}")
         print(f"   File size: {file_size_mb:.2f} MB")
     except Exception as e:
         print(f"   ❌ ERROR saving pickle: {e}")
-        import traceback
-        traceback.print_exc()
         return False
     
     # ========================================================================
@@ -286,21 +288,17 @@ def build_faiss_index():
     
     try:
         with open(OUTPUT_PKL_FILE, 'rb') as f:
-            loaded_index_bytes, loaded_kb = pickle.load(f)
-        
-        # Deserialize FAISS index from bytes
-        loaded_index = faiss.deserialize_index(loaded_index_bytes)
+            loaded_index, loaded_kb = pickle.load(f)
         
         print(f"   ✅ Verification successful")
         print(f"   Index vectors: {loaded_index.ntotal}")
         print(f"   KB documents: {len(loaded_kb)}")
         
         if loaded_index.ntotal != len(loaded_kb):
-            print(f"   ⚠️ WARNING: Size mismatch detected!")
+            print(f"   ⚠️  WARNING: Size mismatch detected!")
+        
     except Exception as e:
         print(f"   ❌ ERROR verifying file: {e}")
-        import traceback
-        traceback.print_exc()
         return False
     
     # ========================================================================
@@ -314,13 +312,13 @@ def build_faiss_index():
     print(f"   Vectors: {index.ntotal}")
     print(f"   Dimension: {dimension}")
     print(f"   File: {OUTPUT_PKL_FILE} ({file_size_mb:.2f} MB)")
-    print(f"\n🚀 Next steps:")
-    print(f"   1. Upload {OUTPUT_PKL_FILE} to HuggingFace Hub")
-    print(f"   2. Restart your backend")
-    print(f"   3. Test retrieval - should work now!")
+    print(f"\n🚀 You can now start the backend:")
+    print(f"   cd backend")
+    print(f"   uvicorn app.main:app --reload")
     print("=" * 80 + "\n")
     
     return True
+
 
 # ============================================================================
 # RUN SCRIPT
@@ -335,7 +333,7 @@ if __name__ == "__main__":
         print("=" * 80)
         print("\nPlease check:")
         print("1. Knowledge base file exists: data/final_knowledge_base.jsonl")
-        print("2. Retriever model exists: app/models/best_retriever_model.pth")
+        print("2. Retriever model exists: models/best_retriever_model.pth")
         print("3. You have enough RAM (embeddings need ~1GB for 10k docs)")
         print("=" * 80 + "\n")
         exit(1)
