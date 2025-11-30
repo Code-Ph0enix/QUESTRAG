@@ -322,21 +322,40 @@ def load_faiss_index():
             with open(settings.FAISS_INDEX_PATH, 'rb') as f:
                 loaded_data = pickle.load(f)
             
+            print(f"📦 Pickle loaded successfully")
+            
             # ✅ Handle both formats: (index, kb_data) OR (index_bytes, kb_data)
             if isinstance(loaded_data, tuple) and len(loaded_data) == 2:
                 first_item, KB_DATA = loaded_data
                 
-                # Check if first item is bytes (new format) or FAISS index (old format)
+                # Check if first item is bytes (new format) - SAFE to check
                 if isinstance(first_item, bytes):
-                    # New format: deserialize bytes
                     print("📦 Detected new format (serialized bytes)")
                     FAISS_INDEX = faiss.deserialize_index(first_item)
-                elif hasattr(first_item, 'ntotal'):
-                    # Old format: direct FAISS index object
-                    print("📦 Detected old format (direct index)")
-                    FAISS_INDEX = first_item
+                    print(f"✅ FAISS index deserialized successfully")
+                
+                # Otherwise assume it's old format and try to use it
                 else:
-                    raise ValueError(f"Unknown FAISS index format: {type(first_item)}")
+                    print(f"📦 Detected old format (attempting to use directly)")
+                    
+                    # ❌ DON'T use hasattr() - it crashes on corrupted FAISS!
+                    # Instead, try to use it and catch errors
+                    try:
+                        FAISS_INDEX = first_item
+                        # Test if it works by accessing ntotal
+                        num_vectors = FAISS_INDEX.ntotal
+                        print(f"✅ FAISS index is valid ({num_vectors} vectors)")
+                    except Exception as e:
+                        print(f"❌ FAISS index object is corrupted: {e}")
+                        print(f"⚠️ This pickle was created with incompatible FAISS version")
+                        print(f"")
+                        print(f"🔧 SOLUTION: Rebuild FAISS index using:")
+                        print(f"   python build_faiss_index.py")
+                        print(f"")
+                        raise RuntimeError(
+                            f"FAISS index is corrupted or incompatible (FAISS version mismatch). "
+                            f"Please rebuild using: python build_faiss_index.py"
+                        )
             else:
                 raise ValueError(f"Invalid pickle format: expected tuple, got {type(loaded_data)}")
             
@@ -347,6 +366,8 @@ def load_faiss_index():
             print(f"❌ FAISS index file not found: {settings.FAISS_INDEX_PATH}")
             print(f"⚠️ Make sure models are uploaded to HuggingFace Hub: {settings.HF_MODEL_REPO}")
             raise
+        except RuntimeError:
+            raise  # Re-raise our custom error
         except Exception as e:
             print(f"❌ Failed to load FAISS index: {e}")
             import traceback
@@ -354,6 +375,7 @@ def load_faiss_index():
             raise
     
     return FAISS_INDEX, KB_DATA
+
 
 
 # ==================================================================================================
