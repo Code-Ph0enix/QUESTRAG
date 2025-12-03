@@ -552,3 +552,478 @@ pip install PyPDF2 pdfplumber python-docx pillow pytesseract openai
 **Token: 68,850 (36.2%)**
 
 **Summary complete! Yeh last response hoga most likely. Good luck with frontend! 🚀**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Token Usage Tracking
+
+**Tokens Used This Response:** ~2,100 tokens  
+**Tokens Remaining:** ~135,900 / 190,000 tokens  
+**Usage:** 28.5% of limit
+
+---
+
+# 🎯 Frontend SSE Integration - Explained (No Code)
+
+## What Happens Step-by-Step
+
+### **Normal Chat (Without Streaming - Current)**
+```
+1. User types "What is my balance?"
+2. Click Send button
+3. Frontend makes POST request to /api/v1/chat/
+4. [WAIT 10 SECONDS - BLANK SCREEN]
+5. Backend returns full JSON response
+6. Frontend displays entire message at once
+```
+
+**Problem:** User stares at blank screen for 10s
+
+---
+
+### **Streaming Chat (With SSE - New)**
+```
+1. User types "What is my balance?"
+2. Click Send button
+3. Frontend makes POST request to /api/v1/chat/stream
+4. Backend opens a STREAM (connection stays open)
+5. Frontend receives events in real-time:
+   
+   [1s] Event: status → "Searching documents..."
+        Frontend shows: Loading indicator with text
+   
+   [2s] Event: content → "Your"
+        Frontend shows: "Your"
+   
+   [2.5s] Event: content → " account"
+        Frontend shows: "Your account"
+   
+   [3s] Event: content → " balance"
+        Frontend shows: "Your account balance"
+   
+   [5s] Event: content → " is $1,234.56"
+        Frontend shows: "Your account balance is $1,234.56"
+   
+   [8s] Event: done → Stream completed
+        Frontend closes connection, shows complete message
+
+6. Connection closes automatically
+```
+
+**Benefit:** User sees response building word-by-word (like typing effect)
+
+---
+
+## Where Code Goes in Frontend
+
+### **Option 1: Separate Service File (Recommended)**
+```
+frontend/
+  src/
+    services/
+      chatService.js  ← All API calls here
+      streamService.js ← SSE streaming logic here
+    
+    components/
+      ChatWindow.jsx  ← Calls streamService.sendMessage()
+      MessageList.jsx ← Displays messages
+```
+
+**Why?** Clean separation, reusable
+
+---
+
+### **Option 2: Inside Component (Simple)**
+```
+frontend/
+  src/
+    components/
+      ChatWindow.jsx  ← Everything in one file
+```
+
+**Why?** Quick and dirty, good for prototyping
+
+---
+
+## What Each File Does
+
+### **1. Stream Service (streamService.js)**
+**Purpose:** Handles SSE connection + parsing events
+
+**Responsibilities:**
+- Opens connection to `/api/v1/chat/stream`
+- Reads SSE stream byte-by-byte
+- Parses `event: content\ndata: {...}` format
+- Calls callbacks for each event type
+
+**What it exports:**
+```javascript
+// Pseudo-code (not actual code)
+export function sendStreamingMessage(query, callbacks) {
+  // callbacks = {
+  //   onStatus: (message) => ...,
+  //   onContent: (text) => ...,
+  //   onDone: () => ...,
+  //   onError: (error) => ...
+  // }
+}
+```
+
+---
+
+### **2. Chat Component (ChatWindow.jsx)**
+**Purpose:** UI that user sees
+
+**Responsibilities:**
+- Render input box + send button
+- Call `streamService.sendStreamingMessage()`
+- Update UI when events arrive
+- Show loading indicators
+
+**What it does:**
+```javascript
+// Pseudo-code
+function ChatWindow() {
+  const [messages, setMessages] = useState([]);
+  const [currentResponse, setCurrentResponse] = useState('');
+  
+  function handleSend(query) {
+    // Add user message immediately
+    addMessage({role: 'user', content: query});
+    
+    // Start streaming
+    streamService.sendStreamingMessage(query, {
+      onStatus: (msg) => showLoadingText(msg),
+      onContent: (chunk) => setCurrentResponse(prev => prev + chunk),
+      onDone: () => {
+        addMessage({role: 'assistant', content: currentResponse});
+        setCurrentResponse('');
+      }
+    });
+  }
+}
+```
+
+---
+
+## How SSE Actually Works (Technical)
+
+### **Backend Behavior:**
+```
+POST /api/v1/chat/stream
+→ Connection opens (stays open)
+→ Backend sends data in chunks:
+
+event: status
+data: {"message": "Searching..."}
+[blank line]
+
+event: content
+data: {"text": "Your"}
+[blank line]
+
+event: content
+data: {"text": " account"}
+[blank line]
+
+...
+
+event: done
+data: {}
+[blank line]
+
+→ Connection closes
+```
+
+**Key:** Each event is separated by blank line (`\n\n`)
+
+---
+
+### **Frontend Behavior:**
+```
+1. Open connection to /api/v1/chat/stream
+2. Read response body as stream (not JSON!)
+3. Decode bytes to text
+4. Split by blank lines
+5. Parse each event:
+   - Extract event type (status, content, done)
+   - Extract data (JSON)
+6. Call appropriate callback
+7. Close connection when done
+```
+
+---
+
+## Browser API Used: Fetch Streaming
+
+**Not EventSource!** We use **fetch() with streaming response**
+
+**Why?**
+- EventSource = Can't send POST body
+- Fetch streaming = Full control
+
+**How it works:**
+```javascript
+// Pseudo-code
+fetch('/api/v1/chat/stream', {method: 'POST', body: ...})
+  .then(response => {
+    const reader = response.body.getReader();
+    
+    // Read loop
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      
+      // value = Uint8Array of bytes
+      // Decode to text, parse events
+    }
+  })
+```
+
+---
+
+## UI States to Handle
+
+### **1. Initial State**
+```
+User input: [textbox]
+Button: [Send]
+Messages: [empty]
+```
+
+---
+
+### **2. Streaming State**
+```
+User input: [disabled]
+Button: [Stop] ← Changed to "Stop" button
+Messages: 
+  - User: "What is my balance?"
+  - Bot: "Your account balance is..." ← Updating in real-time
+  - Loading: "Generating response..." ← Status indicator
+```
+
+---
+
+### **3. Complete State**
+```
+User input: [textbox] ← Re-enabled
+Button: [Send]
+Messages:
+  - User: "What is my balance?"
+  - Bot: "Your account balance is $1,234.56" ← Complete
+```
+
+---
+
+## Stop Button Implementation
+
+**User clicks "Stop":**
+```
+1. Frontend calls abortController.abort()
+2. Fetch stream closes immediately
+3. Backend continues processing (can't stop)
+4. Frontend shows partial response
+5. Save partial response to conversation
+```
+
+---
+
+## Regenerate Button
+
+**Where it appears:** Next to assistant message
+
+**What happens:**
+```
+1. User clicks "Regenerate" button
+2. Frontend calls POST /api/v1/chat/conversation/{id}/regenerate
+3. Backend deletes last assistant message
+4. Backend re-processes last user query
+5. Frontend receives new stream (same as normal chat)
+6. Old message replaced with new response
+```
+
+---
+
+## Edit Button
+
+**Where it appears:** Next to user message
+
+**What happens:**
+```
+1. User clicks "Edit" on their message
+2. Message becomes editable textbox
+3. User changes text, clicks "Save"
+4. Frontend calls POST /api/v1/chat/conversation/{id}/edit
+5. Backend updates message + regenerates response
+6. Frontend receives stream with new response
+```
+
+---
+
+## Error Handling
+
+### **Network Error (Connection Lost)**
+```
+Frontend detects: reader.read() throws error
+Action:
+  - Show error message
+  - Re-enable input
+  - Keep partial response (if any)
+```
+
+### **Backend Error (event: error)**
+```
+Backend sends: event: error, data: {"message": "..."}
+Action:
+  - Display error to user
+  - Stop streaming
+  - Re-enable input
+```
+
+---
+
+## Summary - Files You Need to Create/Modify
+
+### **Backend (Already Done ✅)**
+- streaming_service.py ✅
+- conversation_routes.py ✅
+- llm_manager.py ✅
+
+### **Frontend (You Need to Do)**
+1. **streamService.js** - SSE parsing logic
+2. **ChatWindow.jsx** - Update to use streaming
+3. **MessageBubble.jsx** - Show typing indicator
+4. **StatusIndicator.jsx** - Show "Searching..." text
+
+---
+
+## Key Concepts to Understand
+
+### **1. State Management**
+```
+You need 3 states:
+- messages: All messages (saved)
+- currentStreamingText: Text being built (temporary)
+- streamingStatus: "Searching..." / "Generating..." / null
+```
+
+### **2. Text Appending**
+```
+DON'T replace entire message each time!
+DO append new chunks:
+  "Your" → "Your account" → "Your account balance"
+```
+
+### **3. Connection Management**
+```
+- Store AbortController reference
+- Call abort() when user clicks Stop
+- Clean up on unmount (React useEffect cleanup)
+```
+
+---
+
+**Samajh aaya? Any specific doubt about implementation?** 🤔
+
+---
+
+**Token Update:**  
+**Remaining:** ~135,900 tokens | **Used:** 28.5%

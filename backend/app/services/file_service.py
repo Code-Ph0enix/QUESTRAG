@@ -5,7 +5,7 @@ from fastapi import UploadFile, HTTPException
 import pytesseract
 from PIL import Image
 import PyPDF2
-import docx
+from docx import Document
 from io import BytesIO
 
 from app.utils.file_utils import (
@@ -130,8 +130,11 @@ class FileService:
         # Extract
         text = ""
         try:
-            doc = docx.Document(filepath)
-            text = "\n".join([para.text for para in doc.paragraphs])
+            # doc = docx.Document(filepath)
+            # text = "\n".join([para.text for para in doc.paragraphs])
+            doc = Document(filepath)
+            text = "\n".join([p.text for p in doc.paragraphs])
+
         except Exception as e:
             print(f"⚠️ DOCX extraction failed: {e}")
         
