@@ -9,8 +9,8 @@ Handles conversation persistence with:
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Annotated
-from pydantic import BaseModel, Field, ConfigDict, field_validator, BeforeValidator
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
 
@@ -18,18 +18,25 @@ from bson import ObjectId
 # CUSTOM TYPES
 # ============================================================================
 
-def validate_object_id(v: Any) -> ObjectId:
-    """Validator function for ObjectId"""
-    if isinstance(v, ObjectId):
-        return v
-    if isinstance(v, str):
-        if ObjectId.is_valid(v):
-            return ObjectId(v)
-    raise ValueError("Invalid ObjectId")
+class PyObjectId(ObjectId):
+    """Custom ObjectId type compatible with Pydantic v2"""
 
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-# Annotated type for PyObjectId compatible with Pydantic v2
-PyObjectId = Annotated[ObjectId, BeforeValidator(validate_object_id)]
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        schema = handler(core_schema)
+        schema.update(type="string")
+        return schema
+
 
 
 # ============================================================================
@@ -56,11 +63,11 @@ class Message(BaseModel):
         description="RAG metadata: policy_action, confidence, docs_retrieved, etc."
     )
     
-    model_config = ConfigDict(
-        json_encoders={
+    class Config:
+        json_encoders = {
             datetime: lambda v: v.isoformat()
-        },
-        json_schema_extra={
+        }
+        schema_extra = {
             "example": {
                 "role": "user",
                 "content": "What is my account balance?",
@@ -68,7 +75,6 @@ class Message(BaseModel):
                 "metadata": None
             }
         }
-    )
 
 
 # ============================================================================
@@ -108,14 +114,16 @@ class Conversation(BaseModel):
     # Metadata
     message_count: int = Field(default=0, description="Total messages (excluding deleted)")
     
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_encoders={
-            ObjectId: str,
-            datetime: lambda v: v.isoformat(),
-        },
-        json_schema_extra={
+    class Config:
+        model_config = {
+            "populate_by_name": True,
+            "arbitrary_types_allowed": True,
+            "json_encoders": {
+                ObjectId: str,
+                datetime: lambda v: v.isoformat(),
+            },
+        }
+        schema_extra = {
             "example": {
                 "user_id": "user_123",
                 "title": "Account Balance Inquiry",
@@ -142,7 +150,6 @@ class Conversation(BaseModel):
                 "message_count": 2
             }
         }
-    )
 
 
 # ============================================================================
@@ -163,14 +170,13 @@ class CreateConversationRequest(BaseModel):
         max_length=1000
     )
     
-    model_config = ConfigDict(
-        json_schema_extra={
+    class Config:
+        schema_extra = {
             "example": {
                 "title": "Savings Account Help",
                 "first_message": "How do I open a savings account?"
             }
         }
-    )
 
 
 class AddMessageRequest(BaseModel):
@@ -178,13 +184,12 @@ class AddMessageRequest(BaseModel):
     
     message: str = Field(..., description="User message to add")
     
-    model_config = ConfigDict(
-        json_schema_extra={
+    class Config:
+        schema_extra = {
             "example": {
                 "message": "What are the interest rates?"
             }
         }
-    )
 
 
 class UpdateConversationRequest(BaseModel):
@@ -193,13 +198,12 @@ class UpdateConversationRequest(BaseModel):
     title: Optional[str] = Field(default=None, description="New title")
     is_archived: Optional[bool] = Field(default=None, description="Archive status")
     
-    model_config = ConfigDict(
-        json_schema_extra={
+    class Config:
+        schema_extra = {
             "example": {
                 "title": "Fixed Deposit Rates Discussion"
             }
         }
-    )
 
 
 class ConversationResponse(BaseModel):
@@ -215,11 +219,10 @@ class ConversationResponse(BaseModel):
     last_message_at: Optional[datetime]
     message_count: int
     
-    model_config = ConfigDict(
-        json_encoders={
+    class Config:
+        json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-    )
 
 
 class ConversationListResponse(BaseModel):
@@ -235,11 +238,11 @@ class ConversationListResponse(BaseModel):
     last_message_at: Optional[datetime]
     message_count: int
     
-    model_config = ConfigDict(
-        json_encoders={
+    class Config:
+        json_encoders = {
             datetime: lambda v: v.isoformat()
-        },
-        json_schema_extra={
+        }
+        schema_extra = {
             "example": {
                 "id": "507f1f77bcf86cd799439011",
                 "user_id": "user_123",
@@ -252,7 +255,6 @@ class ConversationListResponse(BaseModel):
                 "message_count": 6
             }
         }
-    )
 
 
 class ConversationListResult(BaseModel):
@@ -264,8 +266,8 @@ class ConversationListResult(BaseModel):
     page_size: int = Field(default=20, description="Items per page")
     has_more: bool = Field(..., description="Are there more pages?")
     
-    model_config = ConfigDict(
-        json_schema_extra={
+    class Config:
+        schema_extra = {
             "example": {
                 "conversations": [],
                 "total": 42,
@@ -274,4 +276,38 @@ class ConversationListResult(BaseModel):
                 "has_more": True
             }
         }
-    )
+
+
+
+
+# class PyObjectId(ObjectId):
+#     """Custom ObjectId type for Pydantic validation"""
+    
+#     @classmethod
+#     def __get_validators__(cls):
+#         yield cls.validate
+    
+#     @classmethod
+#     def validate(cls, v):
+#         if not ObjectId.is_valid(v):
+#             raise ValueError("Invalid ObjectId")
+#         return ObjectId(v)
+    
+#     @classmethod
+#     def __modify_schema__(cls, field_schema):
+#         field_schema.update(type="string")
+
+
+
+
+        # allow_population_by_field_name = True
+        # arbitrary_types_allowed = True
+        # model_config = {
+        #     "populate_by_name": True,
+        #     "arbitrary_types_allowed": True,
+        # }
+
+        # json_encoders = {
+        #     ObjectId: str,
+        #     datetime: lambda v: v.isoformat()
+        # }
