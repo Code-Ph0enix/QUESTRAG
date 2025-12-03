@@ -626,6 +626,145 @@ class ConversationRepository:
         except Exception as e:
             print(f"❌ Update reaction error: {e}")
             return False
+    
+    
+    
+    # ============================================================================
+    # ADD TO: backend/app/db/repositories/conversation_repository.py
+    # Add these methods to ConversationRepository class
+    # ============================================================================
+
+    async def remove_last_assistant_message(
+        self,
+        conversation_id: str
+    ) -> bool:
+        """
+        Remove the last assistant message from conversation.
+
+        Used for regenerate functionality.
+
+        Args:
+            conversation_id: Conversation ID
+
+        Returns:
+            bool: True if removed
+        """
+        try:
+            from bson import ObjectId
+
+            # Get conversation
+            conversation = await self.collection.find_one(
+                {"_id": ObjectId(conversation_id)}
+            )
+
+            if not conversation:
+                return False
+
+            messages = conversation.get('messages', [])
+
+            # Find last assistant message index
+            last_assistant_idx = None
+            for i in range(len(messages) - 1, -1, -1):
+                if messages[i].get('role') == 'assistant':
+                    last_assistant_idx = i
+                    break
+                    
+            if last_assistant_idx is None:
+                print("⚠️ No assistant message to remove")
+                return False
+
+            # Remove message
+            messages.pop(last_assistant_idx)
+
+            # Update conversation
+            result = await self.collection.update_one(
+                {"_id": ObjectId(conversation_id)},
+                {
+                    "$set": {
+                        "messages": messages,
+                        "message_count": len(messages),
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+
+            if result.modified_count > 0:
+                print(f"✅ Removed last assistant message from conversation {conversation_id}")
+                return True
+
+            return False
+
+        except Exception as e:
+            print(f"❌ Remove last assistant message error: {e}")
+            return False
+
+
+async def update_last_user_message(
+    self,
+    conversation_id: str,
+    new_content: str
+) -> bool:
+    """
+    Update the content of last user message.
+    
+    Used for edit functionality.
+    
+    Args:
+        conversation_id: Conversation ID
+        new_content: New message content
+    
+    Returns:
+        bool: True if updated
+    """
+    try:
+        from bson import ObjectId
+        
+        # Get conversation
+        conversation = await self.collection.find_one(
+            {"_id": ObjectId(conversation_id)}
+        )
+        
+        if not conversation:
+            return False
+        
+        messages = conversation.get('messages', [])
+        
+        # Find last user message index
+        last_user_idx = None
+        for i in range(len(messages) - 1, -1, -1):
+            if messages[i].get('role') == 'user':
+                last_user_idx = i
+                break
+        
+        if last_user_idx is None:
+            print("⚠️ No user message to update")
+            return False
+        
+        # Update message content
+        messages[last_user_idx]['content'] = new_content
+        messages[last_user_idx]['timestamp'] = datetime.utcnow()
+        messages[last_user_idx]['edited'] = True  # Flag as edited
+        
+        # Update conversation
+        result = await self.collection.update_one(
+            {"_id": ObjectId(conversation_id)},
+            {
+                "$set": {
+                    "messages": messages,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            print(f"✅ Updated last user message in conversation {conversation_id}")
+            return True
+        
+        return False
+    
+    except Exception as e:
+        print(f"❌ Update last user message error: {e}")
+        return False
 
 
 # ============================================================================

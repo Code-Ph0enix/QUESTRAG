@@ -17,11 +17,12 @@ Fallback Logic:
 """
 
 import time
-from typing import List, Dict, Optional, Literal
+from typing import AsyncGenerator, List, Dict, Optional, Literal
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from huggingface_hub import InferenceClient
 from app.config import settings
+import asyncio
 
 # ============================================================================
 # GROQ MANAGER WITH FALLBACK
@@ -299,7 +300,7 @@ class LLMManager:
         messages: List[Dict[str, str]],
         system_prompt: Optional[str] = None,
         task: Literal["chat", "evaluation"] = "chat"
-    ) -> str:
+        ) -> str:
         """
         Generate response with cascading fallback logic.
         
@@ -343,6 +344,140 @@ class LLMManager:
                 raise ValueError(f"All LLM providers exhausted. HuggingFace error: {hf_error}")
         
         raise ValueError("No LLM provider available")
+    
+    # ============================================================================
+    # ADD TO: backend/app/core/llm_manager.py
+    # Add this method to LLMManager class
+    # ============================================================================
+
+    async def stream_chat_response(
+        self,
+        query: str,
+        context: str = "",
+        history: List[Dict[str, str]] = None,
+        max_tokens: int = 1000,
+        temperature: float = 0.7
+    ) -> AsyncGenerator[str, None]:
+        """
+        Stream chat response (yields chunks as they're generated).
+    
+        Tries Groq first (streaming), falls back to HuggingFace (non-streaming).
+    
+        Args:
+            query: User query
+            context: Retrieved context
+            history: Conversation history
+            max_tokens: Max response length
+            temperature: Sampling temperature
+    
+        Yields:
+            str: Response chunks
+        """
+        if history is None:
+            history = []
+    
+        # Build system prompt
+        system_prompt = """You are an expert banking assistant specialized in Indian financial regulations and banking practices.
+
+    Instructions:
+    - Answer accurately using provided context when available
+    - If context is insufficient, still respond helpfully
+    - Keep responses clear and concise
+    - Never fabricate specific policies or rates
+    - Maintain a professional tone"""
+    
+        # Build user message
+        user_message = query
+        if context:
+            user_message = f"""Context from knowledge base:
+    {context}
+
+    User Query: {query}
+
+    Please answer the query using the context above when relevant."""
+    
+        # ====================================================================
+        # TRY GROQ (STREAMING SUPPORTED)
+        # ====================================================================
+        if self.groq:
+            try:
+                # Build messages for Groq
+                messages = [{"role": "system", "content": system_prompt}]
+            
+                # Add history
+                for msg in history[-10:]:  # Last 10 messages
+                    messages.append({
+                        "role": msg['role'],
+                        "content": msg['content']
+                    })
+            
+                # Add current query
+                messages.append({"role": "user", "content": user_message})
+            
+                # Stream from Groq
+                stream = self.groq.chat.completions.create(
+                    model=self.groq_model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    stream=True  # Enable streaming
+                )
+            
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+            
+                return  # Success, exit
+        
+            except Exception as e:
+                print(f"⚠️ Groq streaming failed: {e}")
+                # Fall through to HuggingFace
+    
+        # ====================================================================
+        # FALLBACK: HUGGINGFACE (NO STREAMING - SIMULATE)
+        # ====================================================================
+        if self.huggingface:
+            try:
+                print("⚠️ Using HuggingFace (simulated streaming)")
+            
+                # Build prompt for HuggingFace
+                prompt = f"{system_prompt}\n\n"
+            
+                # Add history
+                for msg in history[-5:]:
+                    role = "Human" if msg['role'] == 'user' else "Assistant"
+                    prompt += f"{role}: {msg['content']}\n"
+            
+                prompt += f"Human: {user_message}\nAssistant:"
+            
+                # Generate full response
+                response = self.huggingface(
+                    prompt,
+                    max_new_tokens=max_tokens,
+                    temperature=temperature,
+                    do_sample=True,
+                    return_full_text=False
+                )[0]['generated_text']
+            
+                # Simulate streaming by splitting into words
+                words = response.split()
+                for i, word in enumerate(words):
+                    # Add space except for first word
+                    chunk = word if i == 0 else f" {word}"
+                    yield chunk
+                
+                    # Small delay to simulate streaming
+                    await asyncio.sleep(0.05)  # 50ms per word
+            
+                return
+        
+            except Exception as e:
+                print(f"❌ HuggingFace streaming failed: {e}")
+    
+        # ====================================================================
+        # BOTH FAILED - RETURN ERROR
+        # ====================================================================
+        yield "I apologize, but I'm unable to generate a response at the moment. Please try again."
     
     async def generate_chat_response(
         self,
