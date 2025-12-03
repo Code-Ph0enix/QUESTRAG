@@ -49,7 +49,7 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[str] = Field(None, description="Optional conversation ID. If not provided, creates new conversation.")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "query": "What is my account balance?",
                 "conversation_id": "507f1f77bcf86cd799439011"
