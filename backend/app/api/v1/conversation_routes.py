@@ -1,3 +1,9 @@
+# ============================================================================
+# backend/app/api/v1/conversation_routes.py
+# ============================================================================
+
+
+
 """
 Conversation & Chat API Endpoints (UNIFIED)
 
@@ -23,7 +29,7 @@ from app.models.conversation import (
     UpdateConversationRequest,
     ConversationResponse,
     ConversationListResult,
-    Message
+    ReactToMessageRequest  # 🆕 NEW
 )
 
 
@@ -502,6 +508,132 @@ async def get_conversation_stats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get stats: {str(e)}"
+        )
+
+
+# ========================================================================
+# 🆕 NEW ENDPOINTS - Add at bottom before health check
+# ========================================================================
+
+@router.post("/conversation/{conversation_id}/message/{message_index}/react")
+async def react_to_message(
+    conversation_id: str,
+    message_index: int,
+    request: ReactToMessageRequest,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """
+    👍👎 React to a message.
+    
+    - message_index: Index of message in conversation (0-based)
+    - reaction: 'like' or 'dislike'
+    
+    Replaces existing reaction if user reacts again.
+    User must own the conversation.
+    """
+    try:
+        # Get conversation
+        conversation = await conversation_service.get_conversation(
+            conversation_id=conversation_id,
+            user_id=current_user.user_id
+        )
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found or access denied"
+            )
+        
+        # Validate message index
+        if message_index < 0 or message_index >= len(conversation.messages):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid message index. Conversation has {len(conversation.messages)} messages."
+            )
+        
+        # Can only react to assistant messages
+        message = conversation.messages[message_index]
+        if message.role != 'assistant':
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only react to assistant messages"
+            )
+        
+        # Update reaction in MongoDB
+        await conversation_repository.update_message_reaction(
+            conversation_id=conversation_id,
+            message_index=message_index,
+            reaction=request.reaction
+        )
+        
+        return {
+            "message": "Reaction updated successfully",
+            "conversation_id": conversation_id,
+            "message_index": message_index,
+            "reaction": request.reaction
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ React to message error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update reaction: {str(e)}"
+        )
+
+
+@router.delete("/conversation/{conversation_id}/message/{message_index}/react")
+async def remove_reaction(
+    conversation_id: str,
+    message_index: int,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """
+    ❌ Remove reaction from a message.
+    
+    User must own the conversation.
+    """
+    try:
+        # Get conversation
+        conversation = await conversation_service.get_conversation(
+            conversation_id=conversation_id,
+            user_id=current_user.user_id
+        )
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found or access denied"
+            )
+        
+        # Validate message index
+        if message_index < 0 or message_index >= len(conversation.messages):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid message index"
+            )
+        
+        # Remove reaction in MongoDB
+        await conversation_repository.update_message_reaction(
+            conversation_id=conversation_id,
+            message_index=message_index,
+            reaction=None  # Remove reaction
+        )
+        
+        return {
+            "message": "Reaction removed successfully",
+            "conversation_id": conversation_id,
+            "message_index": message_index
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Remove reaction error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove reaction: {str(e)}"
         )
 
 

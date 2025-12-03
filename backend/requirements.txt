@@ -69,6 +69,7 @@ numpy
 
 # ML/Deep Learning
 torch
+torchaudio
 transformers
 
 
@@ -77,3 +78,11 @@ python-jose[cryptography]
 passlib[bcrypt]==1.7.4
 python-multipart
 bcrypt==4.0.1
+
+# new features dependencies
+python-multipart
+pillow
+pytesseract
+PyPDF2
+python-docx
+pydub

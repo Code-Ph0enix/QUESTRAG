@@ -1,3 +1,8 @@
+# ============================================================================
+# backend/app/main.py
+# ============================================================================
+
+
 """
 FastAPI Main Application Entry Point (UPDATED)
 
@@ -141,6 +146,7 @@ app.add_middleware(
 
 from app.api.v1 import auth
 from app.api.v1 import conversation_routes  # ✅ NEW IMPORT
+from app.api.v1 import file_routes # new file routes
 
 # Auth router (public endpoints - register, login)
 app.include_router(
@@ -154,6 +160,12 @@ app.include_router(
     conversation_routes.router,  # ✅ NEW ROUTER
     prefix="/api/v1/chat",
     tags=["💬 Chat & Conversations"]
+)
+# File Upload router (protected endpoints - requires JWT token)
+app.include_router(
+    file_routes.router,
+    prefix="/api/v1",
+    tags=["📁 File Upload"]
 )
 
 # ============================================================================
@@ -195,6 +207,14 @@ async def root():
                 "delete_conversation": "DELETE /api/v1/chat/conversation/{id} (requires token)",
                 "search_conversations": "GET /api/v1/chat/conversations/search (requires token)",
                 "conversation_stats": "GET /api/v1/chat/conversations/stats (requires token)"
+            },
+            "files": {
+                "upload_image": "POST /api/v1/files/upload/image (requires token)",
+                "upload_pdf": "POST /api/v1/files/upload/pdf (requires token)",
+                "upload_document": "POST /api/v1/files/upload/document (requires token)",
+                "upload_audio": "POST /api/v1/files/upload/audio (requires token)",
+                "delete_file": "DELETE /api/v1/files/delete (requires token)",
+                "health": "GET /api/v1/files/health"
             },
             "health": "GET /health"
         }

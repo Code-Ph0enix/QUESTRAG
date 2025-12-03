@@ -1,3 +1,8 @@
+# ============================================================================
+# backend/app/config.py
+# ============================================================================
+
+
 """
 Application Configuration
 Settings for Banking RAG Chatbot with JWT Authentication
@@ -49,6 +54,15 @@ class Settings:
     # Model names for Groq (using correct GroqCloud naming)
     GROQ_CHAT_MODEL: str = os.getenv("GROQ_CHAT_MODEL", "llama-3.1-8b-instant")  # For chat interface
     GROQ_EVAL_MODEL: str = os.getenv("GROQ_EVAL_MODEL", "llama-3.3-70b-versatile")  # For evaluation
+
+    # ========================================================================
+    # FILE UPLOAD SETTINGS
+    # ========================================================================
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+
+    # OpenAI Whisper API (for audio transcription)
+    # OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
     # ========================================================================
     # Commented as of now, can be re-enabled if rate limiting is needed

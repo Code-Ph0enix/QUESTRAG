@@ -1,3 +1,9 @@
+# ============================================================================
+# backend/app/models/conversation.py
+# ============================================================================
+
+
+
 """
 Conversation Models for MongoDB
 
@@ -10,7 +16,7 @@ Handles conversation persistence with:
 
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Annotated
-from pydantic import BaseModel, Field, ConfigDict, field_validator, BeforeValidator
+from pydantic import BaseModel, Field, ConfigDict, BeforeValidator
 from bson import ObjectId
 
 
@@ -272,6 +278,81 @@ class ConversationListResult(BaseModel):
                 "page": 1,
                 "page_size": 20,
                 "has_more": True
+            }
+        }
+    )
+
+# ============================================================================
+# UPDATE: backend/app/models/conversation.py
+# ADD THIS TO Message CLASS (line ~40)
+# ============================================================================
+
+class Message(BaseModel):
+    """
+    Single message in a conversation.
+    
+    Contains:
+    - User/assistant content
+    - Metadata from RAG pipeline (policy action, retrieval stats)
+    - User reaction (👍 👎)
+    - Timestamp
+    """
+    
+    role: str = Field(..., description="Role: 'user' or 'assistant'")
+    content: str = Field(..., description="Message content")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Metadata from RAG pipeline (only for assistant messages)
+    metadata: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="RAG metadata: policy_action, confidence, docs_retrieved, etc."
+    )
+    
+    # ========================================================================
+    # 🆕 NEW: User reaction to message
+    # ========================================================================
+    reaction: Optional[str] = Field(
+        default=None,
+        description="User reaction: 'like', 'dislike', or None",
+        pattern="^(like|dislike)$"  # Only allow these values
+    )
+    
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat()
+        },
+        json_schema_extra={
+            "example": {
+                "role": "assistant",
+                "content": "Your account balance is $1,234.56",
+                "timestamp": "2024-01-15T10:30:00",
+                "metadata": {
+                    "policy_action": "FETCH",
+                    "confidence": 0.95
+                },
+                "reaction": "like"  # 👍
+            }
+        }
+    )
+
+
+# ============================================================================
+# 🆕 NEW REQUEST MODEL
+# ============================================================================
+
+class ReactToMessageRequest(BaseModel):
+    """Request body for reacting to a message"""
+    
+    reaction: str = Field(
+        ...,
+        description="Reaction type: 'like' or 'dislike'",
+        pattern="^(like|dislike)$"
+    )
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "reaction": "like"
             }
         }
     )

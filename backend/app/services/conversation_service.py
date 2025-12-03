@@ -1,3 +1,8 @@
+# ============================================================================
+# backend/app/services/conversation_service.py
+# ============================================================================
+
+
 """
 Conversation Service - Business Logic Layer (UPDATED)
 
