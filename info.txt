@@ -1,3 +1,172 @@
+FRONTEND FOLDER STRUCTURE WITHOUT NODE MODULES
+
+C:.
+|   .env
+|   .env.local
+|   .gitignore
+|   backup_package.json
+|   eslint.config.js
+|   folder_structure.txt
+|   index.html
+|   package-lock.json
+|   package.json
+|   postcss.config.js
+|   README.md
+|   tailwind.config.js
+|   vercel.json
+|   vite.config.js
+|
+\---src
+    |   App.css
+    |   App.jsx
+    |   main.jsx
+    |
+    +---components
+    |   +---Auth
+    |   |       Login.jsx
+    |   |       ProtectedRoute.jsx
+    |   |       Signup.jsx
+    |   |
+    |   +---Chat
+    |   |       ChatContainer.jsx
+    |   |       MessageBubble.jsx
+    |   |       MessageInput.jsx
+    |   |       PolicyBadge.jsx
+    |   |       TypingIndicator.jsx
+    |   |
+    |   +---Layout
+    |   |   |   Navbar.jsx
+    |   |   |   Sidebar.jsx
+    |   |   |   WelcomeScreen.jsx
+    |   |   |
+    |   |   \---backups
+    |   |           backup_welcome_screen.jsx
+    |   |
+    |   \---UI
+    |       |   Button.jsx
+    |       |   Loader.jsx
+    |       |   ThemeToggle.jsx
+    |       |
+    |       \---backups
+    |               backup_button.jsx
+    |               backup_loader.jsx
+    |               backup_themetoggle.jsx
+    |
+    +---context
+    |       AuthContext.jsx
+    |       backup_chatcontext.jsx
+    |       ChatContext.jsx
+    |       ThemeContext.jsx
+    |
+    +---services
+    |       api.js
+    |       backup_api.js
+    |
+    \---styles
+            index.css
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Token Usage Tracking
 
 **Tokens Used This Response:** ~1,500 tokens  

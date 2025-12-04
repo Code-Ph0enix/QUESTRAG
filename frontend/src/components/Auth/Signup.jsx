@@ -1,3 +1,5 @@
+// frontend/src/components/Auth/Signup.jsx
+
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
