@@ -9,7 +9,7 @@
 # Run this ONCE before starting the backend:
 #     python build_faiss_index.py
 
-# Author: Banking RAG Chatbot
+# Author: Banking RAG Chatbo
 # Date: November 2025
 # """
 
