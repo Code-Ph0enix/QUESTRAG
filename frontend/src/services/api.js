@@ -1,14 +1,21 @@
 import axios from 'axios'
 
 // Get base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://eeshanyaj-questrag-backend.hf.space'
+// For local development: http://localhost:8000
+// For production: https://eeshanyaj-questrag-backend.hf.space
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-// Create axios instance
+console.log('🔗 API Base URL:', API_BASE_URL)
+
+// Create axios instance with CORS-friendly configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  // Enable credentials for CORS (cookies, auth headers)
+  withCredentials: false // Set to false for public APIs, true if you need cookies
 })
 
 // Add token to every request
@@ -110,10 +117,13 @@ export const authAPI = {
 
 export const chatAPI = {
   sendMessage: async (query, conversationId = null) => {
-    const response = await api.post('/api/v1/chat/', {
-      query,
-      conversation_id: conversationId
-    })
+    // Build request body - only include conversation_id if it's a valid ID
+    const requestBody = { query }
+    if (conversationId && conversationId !== 'new') {
+      requestBody.conversation_id = conversationId
+    }
+    console.log('🔗 API Request body:', requestBody)
+    const response = await api.post('/api/v1/chat/', requestBody)
     return response.data
   },
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { HiDatabase, HiX } from 'react-icons/hi'
+import { HiDatabase, HiLightningBolt } from 'react-icons/hi'
 
 const PolicyBadge = ({ action, confidence }) => {
   const isFetch = action === 'FETCH'
@@ -8,22 +8,22 @@ const PolicyBadge = ({ action, confidence }) => {
     <motion.div
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 0.2 }}
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+      transition={{ delay: 0.2, type: 'spring', damping: 15 }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
         isFetch
-          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+          ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30'
+          : 'bg-amber-900/30 text-amber-400 border-amber-500/30'
       }`}
     >
       {isFetch ? (
-        <HiDatabase className="w-3 h-3" />
+        <HiDatabase className="w-3.5 h-3.5" />
       ) : (
-        <HiX className="w-3 h-3" />
+        <HiLightningBolt className="w-3.5 h-3.5" />
       )}
-      <span>{action}</span>
+      <span>{isFetch ? 'RAG' : 'Direct'}</span>
       {confidence && (
-        <span className="ml-1 opacity-75">
-          ({(confidence * 100).toFixed(0)}%)
+        <span className="ml-0.5 opacity-70">
+          {(confidence * 100).toFixed(0)}%
         </span>
       )}
     </motion.div>

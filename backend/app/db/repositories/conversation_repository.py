@@ -38,11 +38,15 @@ class ConversationRepository:
     """
     
     def __init__(self):
-        """Initialize repository with database connection"""
-        self.db = get_database()
+        """Initialize repository - database connection is fetched dynamically"""
         self.collection_name = "conversations"
         self.retrieval_logs_collection = "retrieval_logs"
-        print("✅ ConversationRepository initialized with MongoDB")
+        print("✅ ConversationRepository initialized")
+    
+    @property
+    def db(self):
+        """Get database connection dynamically"""
+        return get_database()
     
     @property
     def collection(self):

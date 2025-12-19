@@ -1,22 +1,33 @@
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '../../context/ChatContext'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
-import Loader from '../UI/Loader'
+import { HiSparkles, HiLightningBolt } from 'react-icons/hi'
+import { BsRobot } from 'react-icons/bs'
 
 const ChatContainer = ({ conversationId }) => {
-  const { messages, isLoading, sendMessage } = useChat()
+  const { messages, isLoading, sendMessage, error } = useChat()
   const messagesEndRef = useRef(null)
+  const messagesContainerRef = useRef(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollToBottom = (behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior })
   }
 
   useEffect(() => {
     scrollToBottom()
   }, [messages, isLoading])
+
+  // Handle scroll to show/hide scroll button
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
+      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 100)
+    }
+  }
 
   const handleSendMessage = async (message) => {
     try {
@@ -27,26 +38,104 @@ const ChatContainer = ({ conversationId }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-900 relative">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 md:px-6 py-6 min-h-0"
+      >
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              <p className="text-lg">No messages yet</p>
-              <p className="text-sm">Start a conversation below!</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full flex flex-col items-center justify-center"
+          >
+            {/* Hero Section for Empty State */}
+            <div className="text-center max-w-md mx-auto space-y-6">
+              {/* Logo/Icon */}
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', damping: 15 }}
+                className="relative inline-block"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-30 animate-pulse" />
+                <div className="relative w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <BsRobot className="w-10 h-10 text-white" />
+                </div>
+              </motion.div>
+
+              {/* Title */}
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  QuestRAG Banking AI
+                </h1>
+                <p className="text-gray-400">
+                  Your intelligent banking assistant powered by RAG + RL
+                </p>
+              </div>
+
+              {/* Feature Pills */}
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-900/30 text-blue-300 rounded-full text-sm">
+                  <HiLightningBolt className="w-4 h-4" />
+                  Fast Responses
+                </span>
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-900/30 text-purple-300 rounded-full text-sm">
+                  <HiSparkles className="w-4 h-4" />
+                  AI-Powered
+                </span>
+              </div>
+
+              {/* Prompt */}
+              <p className="text-sm text-gray-500 pt-4">
+                Type your banking question below to get started
+              </p>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <>
-            {messages.map((message, index) => (
-              <MessageBubble key={index} message={message} index={index} />
-            ))}
+          <div className="max-w-3xl mx-auto space-y-4">
+            <AnimatePresence mode="popLayout">
+              {messages.map((message, index) => (
+                <MessageBubble key={`msg-${index}`} message={message} index={index} />
+              ))}
+            </AnimatePresence>
+            
             {isLoading && <TypingIndicator />}
+            
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center p-3 bg-red-900/30 text-red-400 rounded-lg text-sm"
+              >
+                {error}
+              </motion.div>
+            )}
+            
             <div ref={messagesEndRef} />
-          </>
+          </div>
         )}
       </div>
+
+      {/* Scroll to Bottom Button */}
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => scrollToBottom()}
+            className="absolute bottom-24 right-6 p-3 bg-gray-700 text-white rounded-full shadow-lg hover:bg-gray-600 transition-colors z-10"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Input Area */}
       <MessageInput onSend={handleSendMessage} disabled={isLoading} />

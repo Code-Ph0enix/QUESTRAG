@@ -34,10 +34,16 @@ export const ChatProvider = ({ children }) => {
       }
       setMessages(prev => [...prev, userMessage])
 
-      // Use current conversation ID if not provided
-      const convId = conversationId || currentConversationId
+      // Handle conversation ID - if 'new' or null, pass null to create new conversation
+      let convId = conversationId === 'new' ? null : conversationId
+      // Use current conversation ID if not explicitly provided
+      if (!convId && currentConversationId && currentConversationId !== 'new') {
+        convId = currentConversationId
+      }
 
-      // Call API
+      console.log('📤 Sending to API with convId:', convId)
+
+      // Call API - pass null for new conversations
       const response = await chatAPI.sendMessage(message, convId)
       
       console.log('✅ Response received:', response)

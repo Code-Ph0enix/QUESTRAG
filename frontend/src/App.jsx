@@ -11,14 +11,18 @@ import Sidebar from './components/Layout/Sidebar'
 import ChatContainer from './components/Chat/ChatContainer'
 import WelcomeScreen from './components/Layout/WelcomeScreen'
 
-// Main Chat Page Component (your original structure)
+// Main Chat Page Component
 function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [currentConversationId, setCurrentConversationId] = useState(null)
 
+  const handleGoHome = () => {
+    setCurrentConversationId(null)
+  }
+
   return (
     <ChatProvider>
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
         {/* Sidebar */}
         <Sidebar 
           isOpen={sidebarOpen}
@@ -28,19 +32,22 @@ function ChatPage() {
         />
 
         {/* Main Content */}
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Navbar */}
           <Navbar 
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            onGoHome={handleGoHome}
             sidebarOpen={sidebarOpen}
           />
 
           {/* Chat Area */}
-          <main className="flex-1 overflow-hidden">
+          <main className="flex-1 min-h-0 overflow-hidden">
             {currentConversationId ? (
               <ChatContainer conversationId={currentConversationId} />
             ) : (
-              <WelcomeScreen onNewChat={() => setCurrentConversationId('new')} />
+              <div className="h-full overflow-y-auto">
+                <WelcomeScreen onNewChat={() => setCurrentConversationId('new')} />
+              </div>
             )}
           </main>
         </div>
@@ -53,14 +60,14 @@ function ChatPage() {
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider> {/* ✅ MOVED HERE - Wraps entire app! */}
+      <ThemeProvider>
         <AuthProvider>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
-            {/* Protected Route - Your Original Chat */}
+            {/* Protected Route - Chat */}
             <Route
               path="/chat"
               element={
@@ -77,7 +84,7 @@ function App() {
             <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>
         </AuthProvider>
-      </ThemeProvider> {/* ✅ Closes here */}
+      </ThemeProvider>
     </BrowserRouter>
   )
 }
