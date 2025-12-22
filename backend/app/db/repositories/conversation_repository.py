@@ -39,6 +39,12 @@ class ConversationRepository:
     
     def __init__(self):
         """Initialize repository - database connection is fetched dynamically"""
+        # """Initialize repository with database connection"""
+        # self.db = get_database()
+        # self.collection_name = "conversations"
+        # self.retrieval_logs_collection = "retrieval_logs"
+        # print("✅ ConversationRepository initialized with MongoDB")
+
         self.collection_name = "conversations"
         self.retrieval_logs_collection = "retrieval_logs"
         print("✅ ConversationRepository initialized")

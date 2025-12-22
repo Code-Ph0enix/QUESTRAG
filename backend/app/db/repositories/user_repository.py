@@ -16,6 +16,15 @@ class UserRepository:
     def __init__(self):
         """Initialize repository - database connection is fetched dynamically"""
         self.collection_name = "users"
+        #         """Initialize repository with database connection"""
+        # self.db = get_database()
+        
+        # if self.db is None:
+        #     print("⚠️ UserRepository: MongoDB not connected")
+        #     self.users = None
+        # else:
+        #     self.users = self.db["users"]
+        #     print("✅ UserRepository initialized")
         print("✅ UserRepository initialized")
     
     @property
