@@ -126,6 +126,7 @@ QUESTRAG addresses these challenges through:
 - 🤗 HuggingFace Hub (model storage)
 - ☁️ MongoDB Atlas (cloud database)
 - 🌐 Python 3.12 + uvicorn
+- ⚡​ Vercel
 
 ---
 
@@ -255,8 +256,7 @@ npm run dev
 - **API Docs**: https://eeshanyaj-questrag-backend.hf.space/docs
 - **Health Check**: https://eeshanyaj-questrag-backend.hf.space/health
 
-**Frontend** (Coming Soon):
-- Will be deployed on Vercel/Netlify
+**Live Application**: https://questrag.vercel.app/
 
 ---
 
@@ -493,17 +493,55 @@ git push space main
 # (MongoDB URI, Groq keys, JWT secret, etc.)
 ```
 
-### Frontend Deployment (Vercel/Netlify)
+### Vercel (Frontend)
 
+The frontend is deployed on Vercel with automatic deployments from the GitHub repository:
+
+**Deployment Steps:**
+
+1. **Connect GitHub Repository**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New Project"
+   - Import your GitHub repository: `https://github.com/your-github-repo-link`
+
+2. **Configure Build Settings**
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend` (or any other root directory that you have)
+   - **Build Command**: `npm run build` (default)
+   - **Output Directory**: `dist` (default)
+   - **Install Command**: `npm install` (default)
+
+3. **Add Environment Variable**
+   - In Vercel project settings → Environment Variables
+   - Add the following variable (compulsory):
+```properties
+     VITE_API_BASE_URL=https://your-backend-deployed-link-here
+```
+   - Rest of the variables you can manually add.
+
+
+4. **Deploy**
+   - Click "Deploy"
+   - Vercel will automatically build and deploy your frontend
+   - Your app will be live at: `https://your-deployed-app`
+
+**Continuous Deployment:**
+- Every push to the `main` branch automatically triggers a new deployment
+- Preview deployments are created for pull requests
+
+**Manual Deployment (using Vercel CLI):**
 ```bash
-# Build for production
-npm run build
+# Install Vercel CLI
+npm i -g vercel
 
-# Deploy to Vercel
+# Navigate to frontend directory
+cd frontend
+
+# Deploy to production
 vercel --prod
 
-# Update .env.production with backend URL
-VITE_API_URL=https://eeshanyaj-questrag-backend.hf.space
+# Or deploy with environment variable
+vercel --prod -e VITE_API_BASE_URL=https:your-backend-deployed-link-here
 ```
 
 ---
@@ -562,9 +600,13 @@ MIT License — see [LICENSE](LICENSE)
 
 ## 📞 Contact
 
-**Eeshanya Amit Joshi**  
+**Eeshanya Joshi**  
 📧 [Email](mailto:eeshanyajoshi@gmail.com)    
 💼 [LinkedIn](https://www.linkedin.com/in/eeshanyajoshi/)
+
+**Rohit Deshpande**  
+📧 [Email](mailto:rohitsdeshpande4work@gmail.com)    
+💼 [LinkedIn](https://www.linkedin.com/in/irohitdeshpande/)
 
 ---
 
@@ -574,6 +616,8 @@ MIT License — see [LICENSE](LICENSE)
 - 🚀 Backend API running on [HuggingFace Spaces](https://eeshanyaj-questrag-backend.hf.space)
 - 📚 API Documentation available at [/docs](https://eeshanyaj-questrag-backend.hf.space/docs)
 - 💚 Health status: [Check here](https://eeshanyaj-questrag-backend.hf.space/health)
+- 🌐 Frontend deployed on [Vercel](https://questrag.vercel.app/)
+- ✨ **Full application is now accessible!**
 
 ### 🚧 **Frontend Deployment - Coming Soon!**
 - Will be deployed on Vercel/Netlify
@@ -583,6 +627,7 @@ MIT License — see [LICENSE](LICENSE)
 
 ## 🔗 Links
 
+- **Live Deployed Link:** https://questrag.vercel.app/
 - **Live Backend API:** https://eeshanyaj-questrag-backend.hf.space
 - **API Documentation:** https://eeshanyaj-questrag-backend.hf.space/docs
 - **Health Check:** https://eeshanyaj-questrag-backend.hf.space/health
@@ -593,4 +638,4 @@ MIT License — see [LICENSE](LICENSE)
 ---
 
 <p align="center">✨ Made with ❤️ for the Banking Industry ✨</p>
-<p align="center">Powered by HuggingFace 🤗| Groq ⚡| MongoDB 🍃| Docker 🐳| </p>
+<p align="center">Powered by HuggingFace 🤗| Groq ⚡| MongoDB 🍃| Docker 🐳|​ Vercel⚡</p>
