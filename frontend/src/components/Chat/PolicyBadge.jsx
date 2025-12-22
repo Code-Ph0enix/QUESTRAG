@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { HiDatabase, HiLightningBolt } from 'react-icons/hi'
+import { cn } from '../../lib/utils'
 
 const PolicyBadge = ({ action, confidence }) => {
   const isFetch = action === 'FETCH'
@@ -9,12 +10,17 @@ const PolicyBadge = ({ action, confidence }) => {
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.2, type: 'spring', damping: 15 }}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
         isFetch
-          ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30'
-          : 'bg-amber-900/30 text-amber-400 border-amber-500/30'
-      }`}
+          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+          : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+      )}
     >
+      <span className={cn(
+        "w-1.5 h-1.5 rounded-full",
+        isFetch ? "bg-emerald-500" : "bg-amber-500"
+      )} />
       {isFetch ? (
         <HiDatabase className="w-3.5 h-3.5" />
       ) : (
@@ -22,7 +28,7 @@ const PolicyBadge = ({ action, confidence }) => {
       )}
       <span>{isFetch ? 'RAG' : 'Direct'}</span>
       {confidence && (
-        <span className="ml-0.5 opacity-70">
+        <span className="ml-0.5 text-muted-foreground">
           {(confidence * 100).toFixed(0)}%
         </span>
       )}

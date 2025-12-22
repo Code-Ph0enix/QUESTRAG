@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi'
+import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiArrowLeft } from 'react-icons/hi'
 import { useAuth } from '../../context/AuthContext'
-import Button from '../UI/Button'
+import Logo from '../shared/Logo'
 import Loader from '../UI/Loader'
 
 const Login = () => {
@@ -39,19 +39,47 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-100/50 via-background to-cyan-100/50 dark:from-violet-950/30 dark:via-background dark:to-cyan-950/30" />
+      
+      {/* Gradient orbs */}
+      <motion.div 
+        className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl"
+        animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.25, 0.1] }}
+        transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+      />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+        className="w-full max-w-md relative z-10 p-4"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl shadow-violet-500/10 p-8 border border-violet-200/50 dark:border-violet-500/20">
+          {/* Back to Home Link */}
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-violet-600 dark:hover:text-violet-400 mb-6 transition-colors group"
+          >
+            <HiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+            Back to home
+          </Link>
+          
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" showText={false} animated={true} />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
               Welcome Back
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground">
               Sign in to continue to QuestRAG AI
             </p>
           </div>
@@ -61,28 +89,28 @@ const Login = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm"
+              className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm"
             >
               {error}
             </motion.div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Email
               </label>
               <div className="relative">
-                <HiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <HiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-500" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-violet-200 dark:border-violet-500/30 bg-white/50 dark:bg-gray-900/50 text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                   placeholder="your@email.com"
                 />
               </div>
@@ -90,24 +118,24 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Password
               </label>
               <div className="relative">
-                <HiLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <HiLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-500" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-11 pr-12 py-3.5 rounded-xl border border-violet-200 dark:border-violet-500/30 bg-white/50 dark:bg-gray-900/50 text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <HiEyeOff /> : <HiEye />}
                 </button>
@@ -115,24 +143,31 @@ const Login = () => {
             </div>
 
             {/* Submit Button */}
-            <Button
+            <motion.button
               type="submit"
-              variant="primary"
-              className="w-full"
               disabled={loading}
-              loading={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 via-blue-600 to-cyan-600 text-white font-semibold text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+              {loading ? (
+                <>
+                  <Loader size="sm" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </motion.button>
           </form>
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link
                 to="/signup"
-                className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                className="font-semibold bg-gradient-to-r from-violet-600 to-cyan-600 bg-clip-text text-transparent hover:underline"
               >
                 Sign up
               </Link>

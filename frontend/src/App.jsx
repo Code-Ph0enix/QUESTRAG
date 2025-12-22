@@ -1,55 +1,60 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import { ChatProvider } from './context/ChatContext'
 import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import Login from './components/Auth/Login'
 import Signup from './components/Auth/Signup'
-import Navbar from './components/Layout/Navbar'
-import Sidebar from './components/Layout/Sidebar'
-import ChatContainer from './components/Chat/ChatContainer'
-import WelcomeScreen from './components/Layout/WelcomeScreen'
+import ChatSidebar from './components/Chat/ChatSidebar'
+import ChatWindow from './components/Chat/ChatWindow'
+import HomePage from './pages/HomePage'
 
 // Main Chat Page Component
 function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [currentConversationId, setCurrentConversationId] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
 
-  const handleGoHome = () => {
-    setCurrentConversationId(null)
-  }
+  // Handle responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024
+      setIsMobile(mobile)
+      if (mobile) {
+        setSidebarOpen(false)
+      }
+    }
+    
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <ChatProvider>
-      <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar 
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onSelectConversation={setCurrentConversationId}
-          currentConversationId={currentConversationId}
-        />
+      <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        {/* Sidebar - Fixed on mobile, collapsible on desktop */}
+        <div 
+          className={`
+            ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
+            ${!isMobile && !sidebarOpen ? 'w-0' : 'w-72'}
+            transition-all duration-300 ease-in-out
+            flex-shrink-0
+          `}
+        >
+          <ChatSidebar 
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            isMobile={isMobile}
+          />
+        </div>
 
-        {/* Main Content */}
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Navbar */}
-          <Navbar 
+        {/* Main Content - Expands to full width when sidebar is hidden */}
+        <div className="flex-1 flex flex-col min-h-0 relative w-full">
+          <ChatWindow 
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            onGoHome={handleGoHome}
             sidebarOpen={sidebarOpen}
           />
-
-          {/* Chat Area */}
-          <main className="flex-1 min-h-0 overflow-hidden">
-            {currentConversationId ? (
-              <ChatContainer conversationId={currentConversationId} />
-            ) : (
-              <div className="h-full overflow-y-auto">
-                <WelcomeScreen onNewChat={() => setCurrentConversationId('new')} />
-              </div>
-            )}
-          </main>
         </div>
       </div>
     </ChatProvider>
@@ -64,6 +69,7 @@ function App() {
         <AuthProvider>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
@@ -77,11 +83,8 @@ function App() {
               }
             />
 
-            {/* Redirect root to chat */}
-            <Route path="/" element={<Navigate to="/chat" replace />} />
-
-            {/* 404 - Redirect to chat */}
-            <Route path="*" element={<Navigate to="/chat" replace />} />
+            {/* 404 - Redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
       </ThemeProvider>
@@ -90,58 +93,3 @@ function App() {
 }
 
 export default App
-
-
-
-
-
-
-
-// import { useState } from 'react'
-// import { ChatProvider } from './context/ChatContext'
-// import { ThemeProvider } from './context/ThemeContext'
-// import Navbar from './components/Layout/Navbar'
-// import Sidebar from './components/Layout/Sidebar'
-// import ChatContainer from './components/Chat/ChatContainer'
-// import WelcomeScreen from './components/Layout/WelcomeScreen'
-
-// function App() {
-//   const [sidebarOpen, setSidebarOpen] = useState(true)
-//   const [currentConversationId, setCurrentConversationId] = useState(null)
-
-//   return (
-//     <ThemeProvider>
-//       <ChatProvider>
-//         <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-//           {/* Sidebar */}
-//           <Sidebar 
-//             isOpen={sidebarOpen}
-//             onClose={() => setSidebarOpen(false)}
-//             onSelectConversation={setCurrentConversationId}
-//             currentConversationId={currentConversationId}
-//           />
-
-//           {/* Main Content */}
-//           <div className="flex flex-col flex-1 overflow-hidden">
-//             {/* Navbar */}
-//             <Navbar 
-//               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-//               sidebarOpen={sidebarOpen}
-//             />
-
-//             {/* Chat Area */}
-//             <main className="flex-1 overflow-hidden">
-//               {currentConversationId ? (
-//                 <ChatContainer conversationId={currentConversationId} />
-//               ) : (
-//                 <WelcomeScreen onNewChat={() => setCurrentConversationId('new')} />
-//               )}
-//             </main>
-//           </div>
-//         </div>
-//       </ChatProvider>
-//     </ThemeProvider>
-//   )
-// }
-
-// export default App

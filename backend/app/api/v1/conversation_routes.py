@@ -43,6 +43,36 @@ router = APIRouter()
 
 
 # ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def get_validated_user_id(current_user: TokenData) -> str:
+    """
+    Extract and validate user_id from TokenData.
+    
+    ROLLBACK: This helper was added to fix type errors where 
+    current_user.user_id (Optional[str]) was passed to functions 
+    expecting str. If you need to rollback, remove this function
+    and use current_user.user_id directly (will cause type warnings).
+    
+    Args:
+        current_user: TokenData from JWT authentication
+        
+    Returns:
+        str: Validated user_id
+        
+    Raises:
+        HTTPException: If user_id is None
+    """
+    if not current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User ID not found in token"
+        )
+    return current_user.user_id
+
+
+# ============================================================================
 # REQUEST/RESPONSE MODELS
 # ============================================================================
 
@@ -92,7 +122,8 @@ async def chat(
     Requires JWT authentication.
     """
     try:
-        user_id = current_user.user_id
+        # ROLLBACK: Original was: user_id = current_user.user_id
+        user_id = get_validated_user_id(current_user)
         
         # ====================================================================
         # STEP 1: Get or Create Conversation
@@ -245,8 +276,9 @@ async def create_conversation(
     Returns full conversation object.
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.create_conversation(
-            user_id=current_user.user_id,
+            user_id=get_validated_user_id(current_user),
             request=request,
             llm_manager=None
         )
@@ -288,8 +320,9 @@ async def list_conversations(
     Returns lightweight list (without full message history).
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
         result = await conversation_service.list_conversations(
-            user_id=current_user.user_id,
+            user_id=get_validated_user_id(current_user),
             page=page,
             page_size=page_size,
             include_archived=include_archived
@@ -316,9 +349,10 @@ async def get_conversation(
     User must own the conversation.
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.get_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id
+            user_id=get_validated_user_id(current_user)
         )
         
         if not conversation:
@@ -364,9 +398,10 @@ async def update_conversation(
     User must own the conversation.
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.update_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id,
+            user_id=get_validated_user_id(current_user),
             request=request
         )
         
@@ -417,9 +452,10 @@ async def delete_conversation(
     User must own the conversation.
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
         success = await conversation_service.delete_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id,
+            user_id=get_validated_user_id(current_user),
             permanent=permanent
         )
         
@@ -467,8 +503,9 @@ async def search_conversations(
                 detail="Search query must be at least 2 characters"
             )
         
+        # ROLLBACK: Original was: user_id=current_user.user_id
         result = await conversation_service.search_conversations(
-            user_id=current_user.user_id,
+            user_id=get_validated_user_id(current_user),
             query=query,
             page=page,
             page_size=page_size
@@ -498,12 +535,14 @@ async def get_conversation_stats(
     - archived: Archived conversations
     """
     try:
+        # ROLLBACK: Original was: user_id=current_user.user_id
+        user_id = get_validated_user_id(current_user)
         stats = await conversation_service.get_conversation_stats(
-            user_id=current_user.user_id
+            user_id=user_id
         )
         
         return {
-            "user_id": current_user.user_id,
+            "user_id": user_id,
             "stats": stats
         }
     
@@ -536,9 +575,10 @@ async def react_to_message(
     """
     try:
         # Get conversation
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.get_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id
+            user_id=get_validated_user_id(current_user)
         )
         
         if not conversation:
@@ -599,9 +639,10 @@ async def remove_reaction(
     """
     try:
         # Get conversation
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.get_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id
+            user_id=get_validated_user_id(current_user)
         )
         
         if not conversation:
@@ -680,7 +721,8 @@ async def chat_stream(
     Requires JWT authentication (pass as query param: ?token=YOUR_JWT).
     """
     try:
-        user_id = current_user.user_id
+        # ROLLBACK: Original was: user_id = current_user.user_id
+        user_id = get_validated_user_id(current_user)
         
         # ====================================================================
         # STEP 1: Get or Create Conversation (same as non-streaming)
@@ -853,9 +895,10 @@ async def regenerate_last_response(
     """
     try:
         # Get conversation
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.get_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id
+            user_id=get_validated_user_id(current_user)
         )
         
         if not conversation:
@@ -899,10 +942,11 @@ async def regenerate_last_response(
             full_response = ""
             final_metadata = {}
             
+            # ROLLBACK: Original was: user_id=current_user.user_id
             async for sse_event in streaming_service.stream_chat_response(
                 query=last_user_msg.content,
                 conversation_history=history,
-                user_id=current_user.user_id
+                user_id=get_validated_user_id(current_user)
             ):
                 yield sse_event
                 
@@ -980,9 +1024,10 @@ async def edit_and_regenerate(
     """
     try:
         # Get conversation
+        # ROLLBACK: Original was: user_id=current_user.user_id
         conversation = await conversation_service.get_conversation(
             conversation_id=conversation_id,
-            user_id=current_user.user_id
+            user_id=get_validated_user_id(current_user)
         )
         
         if not conversation:
@@ -1019,10 +1064,11 @@ async def edit_and_regenerate(
             full_response = ""
             final_metadata = {}
             
+            # ROLLBACK: Original was: user_id=current_user.user_id
             async for sse_event in streaming_service.stream_chat_response(
                 query=request.new_content,
                 conversation_history=history,
-                user_id=current_user.user_id
+                user_id=get_validated_user_id(current_user)
             ):
                 yield sse_event
                 

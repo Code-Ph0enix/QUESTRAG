@@ -14,11 +14,12 @@ const Button = ({
   const baseStyles = 'btn inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md'
   
   const variants = {
-    primary: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white focus:ring-indigo-500 shadow-indigo-500/30 hover:shadow-indigo-500/50',
-    secondary: 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 focus:ring-slate-400 shadow-slate-200/50 dark:shadow-slate-900/50',
+    primary: 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white focus:ring-violet-500 shadow-violet-500/30 hover:shadow-violet-500/50',
+    secondary: 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-2 border-violet-200 dark:border-violet-800 focus:ring-violet-400 shadow-violet-200/50 dark:shadow-violet-900/50',
     success: 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white focus:ring-emerald-500 shadow-emerald-500/30',
     danger: 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white focus:ring-red-500 shadow-red-500/30',
-    ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-none hover:shadow-md',
+    ghost: 'hover:bg-violet-100 dark:hover:bg-violet-900/30 text-violet-700 dark:text-violet-300 shadow-none hover:shadow-md',
+    outline: 'border-2 border-violet-500 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 focus:ring-violet-500 shadow-none',
   }
   
   const sizes = {
@@ -27,7 +28,7 @@ const Button = ({
     lg: 'px-8 py-3.5 text-lg',
   }
   
-  const classes = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`
+  const classes = `${baseStyles} ${variants[variant] || variants.primary} ${sizes[size]} ${className}`
   
   return (
     <motion.button

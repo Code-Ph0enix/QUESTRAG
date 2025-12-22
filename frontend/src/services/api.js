@@ -128,7 +128,10 @@ export const chatAPI = {
   },
 
   getHistory: async (conversationId) => {
-    const response = await api.get(`/api/v1/chat/conversations/${conversationId}`)
+    // OLD CODE (commented for rollback):
+    // const response = await api.get(`/api/v1/chat/conversations/${conversationId}`)
+    // NEW CODE - Fixed: endpoint is /conversation/ (singular) not /conversations/
+    const response = await api.get(`/api/v1/chat/conversation/${conversationId}`)
     return response.data
   },
 

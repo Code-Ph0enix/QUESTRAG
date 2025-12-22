@@ -1,26 +1,34 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { HiPaperAirplane, HiPaperClip, HiExclamationCircle } from 'react-icons/hi'
+import { motion, AnimatePresence } from 'framer-motion'
+import { HiPaperAirplane, HiStop, HiMicrophone, HiPaperClip, HiExclamationCircle } from 'react-icons/hi'
 import { cn } from '../../lib/utils'
 
-const MessageInput = ({ onSend, disabled, modelName = 'Llama 3.1 8B' }) => {
-  const [message, setMessage] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
+const ChatInput = ({ 
+  value, 
+  onChange, 
+  onSend, 
+  onStop,
+  disabled,
+  isGenerating,
+  placeholder = "Type your message...",
+  modelName = "Llama 3.1"
+}) => {
   const textareaRef = useRef(null)
+  const [isFocused, setIsFocused] = useState(false)
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`
     }
-  }, [message])
+  }, [value])
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (message.trim() && !disabled) {
-      onSend(message)
-      setMessage('')
+    e?.preventDefault()
+    if (value.trim() && !disabled) {
+      onSend(value)
+      onChange('')
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
@@ -31,11 +39,11 @@ const MessageInput = ({ onSend, disabled, modelName = 'Llama 3.1 8B' }) => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e)
+      handleSubmit()
     }
   }
 
-  const canSend = message.trim() && !disabled
+  const canSend = value.trim() && !disabled
 
   return (
     <div className="p-4 border-t border-border/50 bg-background/80 backdrop-blur-xl">
@@ -65,12 +73,12 @@ const MessageInput = ({ onSend, disabled, modelName = 'Llama 3.1 8B' }) => {
           {/* Text Input */}
           <textarea
             ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Ask me anything about banking..."
+            placeholder={placeholder}
             disabled={disabled}
             rows={1}
             className={cn(
@@ -80,25 +88,56 @@ const MessageInput = ({ onSend, disabled, modelName = 'Llama 3.1 8B' }) => {
               "text-sm md:text-base",
               "disabled:opacity-50"
             )}
-            style={{ minHeight: '24px', maxHeight: '120px' }}
+            style={{ minHeight: '24px', maxHeight: '150px' }}
           />
+
+          {/* Voice Button */}
+          <button
+            type="button"
+            className={cn(
+              "p-3 rounded-xl flex-shrink-0",
+              "text-muted-foreground hover:text-foreground",
+              "hover:bg-accent transition-colors"
+            )}
+            title="Voice input (coming soon)"
+            disabled
+          >
+            <HiMicrophone className="w-5 h-5" />
+          </button>
           
-          {/* Send Button */}
+          {/* Send/Stop Button */}
           <div className="pr-2 pb-2">
-            <motion.button
-              type="submit"
-              disabled={!canSend}
-              whileHover={{ scale: canSend ? 1.05 : 1 }}
-              whileTap={{ scale: canSend ? 0.95 : 1 }}
-              className={cn(
-                "p-2.5 rounded-xl flex-shrink-0 transition-all duration-200",
-                canSend
-                  ? "bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
-              )}
-            >
-              <HiPaperAirplane className="w-5 h-5 transform rotate-90" />
-            </motion.button>
+            {isGenerating ? (
+              <motion.button
+                type="button"
+                onClick={onStop}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "p-2.5 rounded-xl flex-shrink-0",
+                  "bg-red-500 text-white",
+                  "hover:bg-red-600 transition-colors",
+                  "shadow-lg shadow-red-500/25"
+                )}
+              >
+                <HiStop className="w-5 h-5" />
+              </motion.button>
+            ) : (
+              <motion.button
+                type="submit"
+                disabled={!canSend}
+                whileHover={{ scale: canSend ? 1.05 : 1 }}
+                whileTap={{ scale: canSend ? 0.95 : 1 }}
+                className={cn(
+                  "p-2.5 rounded-xl flex-shrink-0 transition-all duration-200",
+                  canSend
+                    ? "bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+              >
+                <HiPaperAirplane className="w-5 h-5 transform rotate-90" />
+              </motion.button>
+            )}
           </div>
         </div>
         
@@ -121,4 +160,4 @@ const MessageInput = ({ onSend, disabled, modelName = 'Llama 3.1 8B' }) => {
   )
 }
 
-export default MessageInput
+export default ChatInput
