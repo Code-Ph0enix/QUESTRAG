@@ -495,7 +495,7 @@ git push space main
 
 ### Vercel (Frontend)
 
-The frontend is deployed on Vercel with automatic deployments from the GitHub repository:
+The frontend is deployed on Vercel with automatic deployments from the GitHub repository.
 
 **Deployment Steps:**
 
@@ -610,20 +610,18 @@ MIT License — see [LICENSE](LICENSE)
 
 ---
 
+
 ## 📈 Status
 
-### ✅ **Backend Deployed & Live!**
+### ✅ **Fully Deployed & Live!**
 - 🚀 Backend API running on [HuggingFace Spaces](https://eeshanyaj-questrag-backend.hf.space)
 - 📚 API Documentation available at [/docs](https://eeshanyaj-questrag-backend.hf.space/docs)
 - 💚 Health status: [Check here](https://eeshanyaj-questrag-backend.hf.space/health)
 - 🌐 Frontend deployed on [Vercel](https://questrag.vercel.app/)
 - ✨ **Full application is now accessible!**
 
-### 🚧 **Frontend Deployment - Coming Soon!**
-- Will be deployed on Vercel/Netlify
-- Stay tuned for full application link! ❤️
-
 ---
+
 
 ## 🔗 Links
 
